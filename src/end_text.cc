@@ -10,26 +10,38 @@
 #include FT_FREETYPE_H
 #include "end_text.hh"
 
-/*
-static const EndTextAnim::Text msgs[] = {
-	{"KEEP CALM", 0, 0.5f},
-	{"AND", 0, 0.2f},
-	{"YES I'M", 0, 0.4f},
-	{"TRANSGENDER", 0, 0.6f},
-	{"Kutsu mua", 1, 0.3f},
-};
-*/
-
 EndTextAnim::EndTextAnim(GLuint _font_shader, GLuint _bezier_shader)
 	: num_frames(0)
 	, font_shader(_font_shader)
 	, bezier_shader(_bezier_shader)
 {
-	glClear(GL_COLOR_BUFFER_BIT);
 	FT_Init_FreeType(&ft);
 
 	fonts.push_back(std::make_unique<Font>(ft, "/usr/share/fonts/ubuntu-font-family/Ubuntu-B.ttf"));
 	fonts.push_back(std::make_unique<Font>(ft, "/usr/share/fonts/open-sans/OpenSans-Light.ttf"));
+
+	const glm::vec2 txtpos[] = {
+		glm::vec2(200.0f, 600.0f),
+		glm::vec2(200.0f, 500.0f),
+		glm::vec2(200.0f, 400.0f),
+		glm::vec2(200.0f, 300.0f),
+		glm::vec2(200.0f, 120.0f),
+	};
+	const glm::vec3 txtcol[] = {
+		glm::vec3(0.3555f, 0.8047f, 0.9776f),
+		glm::vec3(0.9570f, 0.6602f, 0.7186f),
+		glm::vec3(1.0000f, 1.0000f, 1.0000f),
+		glm::vec3(0.9570f, 0.6602f, 0.7186f),
+		glm::vec3(0.3555f, 0.8047f, 0.9776f),
+	};
+
+	texts.emplace_back("KEEP CALM",   *(fonts.at(0)), 0.6f, txtpos[0], txtcol[0],    0);
+	texts.emplace_back("AND",         *(fonts.at(0)), 0.3f, txtpos[1], txtcol[1], 1000);
+	texts.emplace_back("YES I'M",     *(fonts.at(0)), 0.4f, txtpos[2], txtcol[2], 2000);
+	texts.emplace_back("TRANSGENDER", *(fonts.at(0)), 0.8f, txtpos[3], txtcol[3], 3000);
+	texts.emplace_back("Kutsu mua",   *(fonts.at(1)), 0.4f, txtpos[4], txtcol[4], 4000);
+
+	text_it = texts.cbegin();
 
 	glGenVertexArrays(1, &vao);
 	glGenBuffers(1, &vbo);
@@ -70,22 +82,22 @@ void EndTextAnim::render_text(const char *msg, const EndTextAnim::Font &font, fl
 			{xpos + w, ypos,     1.0f, 1.0f},
 			{xpos + w, ypos + h, 1.0f, 0.0f},
 		};
-		fprintf(stderr, "printing %x, bound texture %i, gl error %i\n", *msg, g.texture, glGetError());
 		glBindTexture(GL_TEXTURE_2D, g.texture);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(verts), verts);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
-		x += g.advance >> 6;
+		x += (g.advance >> 6) * scale;
 	}
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 bool EndTextAnim::advance(int rel_time)
 {
-	if (num_frames == 3) {
-		glClear(GL_COLOR_BUFFER_BIT);
-		render_text("trans rights <3", *(fonts.at(0)), 100.0f, 100.0f, 1.0f, glm::vec3(1.0f, 0.2f, 0.5f));
-	}
+	glClear(GL_COLOR_BUFFER_BIT);
+	for (const auto &txt : texts)
+		if (rel_time >= txt.time)
+			render_text(txt.s, txt.font, txt.pos.x, txt.pos.y, txt.sz_scale, txt.color);
+
 	if (++num_frames == 1000)
 		return true;
 	else
@@ -130,9 +142,7 @@ EndTextAnim::Font::Font(FT_Library &ft, const char *src)
 			.advance = (GLuint)glyph->advance.x,
 		};
 		glyphs[c] = g;
-		fprintf(stderr, "created and stored glyph '%c' (%.2x) with tex %i\n", c, c, texture);
 	}
-	fprintf(stderr, "Font %p created\n", this);
 }
 
 const EndTextAnim::Font::Glyph &EndTextAnim::Font::get_glyph(int c) const
@@ -143,5 +153,4 @@ const EndTextAnim::Font::Glyph &EndTextAnim::Font::get_glyph(int c) const
 EndTextAnim::Font::~Font()
 {
 	glDeleteTextures(num_glyphs, textures);
-	fprintf(stderr, "Font %p deleted\n", this);
 }

@@ -9,8 +9,6 @@
 int main(int ar, char **av)
 {
 	int rv = 0;
-	int error; // TODO
-	const unsigned char *kusipaska;
 
 	if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO) != 0) {
 		SDL_Log("Could not init SDL: %s\n", SDL_GetError());

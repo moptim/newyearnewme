@@ -10,7 +10,7 @@
 #define STATE_OUT 2
 
 // TODO
-#define MIN_TIME_DELTA (10000 / 60)
+#define MIN_TIME_DELTA (1000 / 60)
 
 namespace mainloop {
 	namespace {
