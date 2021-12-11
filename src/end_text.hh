@@ -25,7 +25,7 @@ private:
 	std::vector<Text>::const_iterator text_it;
 public:
 	EndTextAnim(GLuint _font_shader, GLuint _bezier_shader);
-	void render_text(const char *msg, const Font &font, float x, float y, float scale, glm::vec3 color);
+	void render_text(const char *msg, const Font &font, float x, float y, float scale, glm::vec3 color, GLuint time_since);
 	bool advance(int rel_time);
 };
 

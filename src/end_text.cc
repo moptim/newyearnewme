@@ -35,11 +35,11 @@ EndTextAnim::EndTextAnim(GLuint _font_shader, GLuint _bezier_shader)
 		glm::vec3(0.3555f, 0.8047f, 0.9776f),
 	};
 
-	texts.emplace_back("KEEP CALM",   *(fonts.at(0)), 0.6f, txtpos[0], txtcol[0],    0);
-	texts.emplace_back("AND",         *(fonts.at(0)), 0.3f, txtpos[1], txtcol[1], 1000);
-	texts.emplace_back("YES I'M",     *(fonts.at(0)), 0.4f, txtpos[2], txtcol[2], 2000);
-	texts.emplace_back("TRANSGENDER", *(fonts.at(0)), 0.8f, txtpos[3], txtcol[3], 3000);
-	texts.emplace_back("Kutsu mua",   *(fonts.at(1)), 0.4f, txtpos[4], txtcol[4], 4000);
+	texts.emplace_back("KEEP CALM",   *(fonts.at(0)), 0.6f, txtpos[0], txtcol[0],  500);
+	texts.emplace_back("AND",         *(fonts.at(0)), 0.3f, txtpos[1], txtcol[1], 2000);
+	texts.emplace_back("YES I'M",     *(fonts.at(0)), 0.4f, txtpos[2], txtcol[2], 4000);
+	texts.emplace_back("TRANSGENDER", *(fonts.at(0)), 0.8f, txtpos[3], txtcol[3], 7000);
+	texts.emplace_back("Kutsu mua",   *(fonts.at(1)), 0.4f, txtpos[4], txtcol[4], 9000);
 
 	text_it = texts.cbegin();
 
@@ -52,14 +52,14 @@ EndTextAnim::EndTextAnim(GLuint _font_shader, GLuint _bezier_shader)
 	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
 }
 
-void EndTextAnim::render_text(const char *msg, const EndTextAnim::Font &font, float x, float y, float scale, glm::vec3 color)
+void EndTextAnim::render_text(const char *msg, const EndTextAnim::Font &font, float x, float y, float scale, glm::vec3 color, GLuint time_since)
 {
 	int i;
 	const float wid = 1024.0f, hei = 768.0f; // TODO TODO
 
 	glm::mat4 projection = glm::ortho(0.0f, (float)wid, 0.0f, (float)hei);
 	glUseProgram(font_shader);
-	glUniform3f(glGetUniformLocation(font_shader, "fgcolor"), color.x, color.y, color.z);
+	glUniform4f(glGetUniformLocation(font_shader, "fgcolor"), color.x, color.y, color.z, (float)time_since * 0.0003f);
 	glUniformMatrix4fv(glGetUniformLocation(font_shader, "projection"), 1, GL_FALSE, &projection[0][0]);
 	glActiveTexture(GL_TEXTURE0);
 	glBindVertexArray(vao);
@@ -96,9 +96,9 @@ bool EndTextAnim::advance(int rel_time)
 	glClear(GL_COLOR_BUFFER_BIT);
 	for (const auto &txt : texts)
 		if (rel_time >= txt.time)
-			render_text(txt.s, txt.font, txt.pos.x, txt.pos.y, txt.sz_scale, txt.color);
+			render_text(txt.s, txt.font, txt.pos.x, txt.pos.y, txt.sz_scale, txt.color, rel_time - txt.time);
 
-	if (++num_frames == 1000)
+	if (++num_frames == 10000)
 		return true;
 	else
 		return false;
