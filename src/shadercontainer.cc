@@ -51,11 +51,8 @@ GLuint ShaderContainer::new_shader(const char *vs_path, const char *fs_path)
 	fs = shader_from_src(fs_path, GL_FRAGMENT_SHADER);
 
 	prg = glCreateProgram();
-	glGetProgramiv(prg, GL_LINK_STATUS, &success);
 	glAttachShader(prg, vs);
-	glGetProgramiv(prg, GL_LINK_STATUS, &success);
 	glAttachShader(prg, fs);
-	glGetProgramiv(prg, GL_LINK_STATUS, &success);
 	glLinkProgram(prg);
 	glGetProgramiv(prg, GL_LINK_STATUS, &success);
 	if (!success) {
