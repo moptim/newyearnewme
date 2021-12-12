@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 #include <GL/gl.h>
 #include <glm/glm.hpp>
@@ -10,8 +11,12 @@
 #include FT_FREETYPE_H
 #include "end_text.hh"
 
-EndTextAnim::EndTextAnim(GLuint _font_shader, GLuint _bezier_shader)
+#define max(a, b) (((a) > (b)) ? (a) : (b))
+#define min(a, b) (((a) < (b)) ? (a) : (b))
+
+EndTextAnim::EndTextAnim(const glm::vec2 &_scr_sz, GLuint _font_shader, GLuint _bezier_shader)
 	: num_frames(0)
+	, scr_sz(_scr_sz)
 	, font_shader(_font_shader)
 	, bezier_shader(_bezier_shader)
 {
@@ -20,13 +25,14 @@ EndTextAnim::EndTextAnim(GLuint _font_shader, GLuint _bezier_shader)
 	fonts.push_back(std::make_unique<Font>(ft, "/usr/share/fonts/ubuntu-font-family/Ubuntu-B.ttf"));
 	fonts.push_back(std::make_unique<Font>(ft, "/usr/share/fonts/open-sans/OpenSans-Light.ttf"));
 
-	const glm::vec2 txtpos[] = {
-		glm::vec2(200.0f, 600.0f),
-		glm::vec2(200.0f, 500.0f),
-		glm::vec2(200.0f, 400.0f),
-		glm::vec2(200.0f, 300.0f),
-		glm::vec2(200.0f, 120.0f),
+	const std::pair<glm::vec2, glm::vec2> txtpos[] = {
+		std::make_pair(glm::vec2(scr_sz.x * 0.5f, scr_sz.y * 0.85f), glm::vec2(0.5f, 0.5f)),
+		std::make_pair(glm::vec2(scr_sz.x * 0.5f, scr_sz.y * 0.7f ), glm::vec2(0.5f, 0.5f)),
+		std::make_pair(glm::vec2(scr_sz.x * 0.5f, scr_sz.y * 0.55f), glm::vec2(0.5f, 0.5f)),
+		std::make_pair(glm::vec2(scr_sz.x * 0.5f, scr_sz.y * 0.35f), glm::vec2(0.5f, 0.5f)),
+		std::make_pair(glm::vec2(scr_sz.x * 0.5f, scr_sz.y * 0.15f), glm::vec2(1.0f, 0.5f)),
 	};
+
 	const glm::vec3 txtcol[] = {
 		glm::vec3(0.3555f, 0.8047f, 0.9776f),
 		glm::vec3(0.9570f, 0.6602f, 0.7186f),
@@ -39,9 +45,7 @@ EndTextAnim::EndTextAnim(GLuint _font_shader, GLuint _bezier_shader)
 	texts.emplace_back("AND",         *(fonts.at(0)), 0.3f, txtpos[1], txtcol[1], 2000);
 	texts.emplace_back("YES I'M",     *(fonts.at(0)), 0.4f, txtpos[2], txtcol[2], 4000);
 	texts.emplace_back("TRANSGENDER", *(fonts.at(0)), 0.8f, txtpos[3], txtcol[3], 7000);
-	texts.emplace_back("Kutsu mua",   *(fonts.at(1)), 0.4f, txtpos[4], txtcol[4], 9000);
-
-	text_it = texts.cbegin();
+	texts.emplace_back("Kutsu mua ",  *(fonts.at(1)), 0.4f, txtpos[4], txtcol[4], 9000);
 
 	glGenVertexArrays(1, &vao);
 	glGenBuffers(1, &vbo);
@@ -52,14 +56,19 @@ EndTextAnim::EndTextAnim(GLuint _font_shader, GLuint _bezier_shader)
 	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
 }
 
-void EndTextAnim::render_text(const char *msg, const EndTextAnim::Font &font, float x, float y, float scale, glm::vec3 color, GLuint time_since)
+void EndTextAnim::render_text(const Text &text, GLuint curr_time)
 {
 	int i;
-	const float wid = 1024.0f, hei = 768.0f; // TODO TODO
+	GLuint time_since = curr_time - text.time;
+	GLint x = text.pos.x, y = text.pos.y;
+	const Font &font = text.font;
+	const float &scale = text.sz_scale;
+	float red = text.color.x, grn = text.color.y, blu = text.color.z;
+	const char *msg = text.s;
 
-	glm::mat4 projection = glm::ortho(0.0f, (float)wid, 0.0f, (float)hei);
+	glm::mat4 projection = glm::ortho(0.0f, scr_sz.x, 0.0f, scr_sz.y);
 	glUseProgram(font_shader);
-	glUniform4f(glGetUniformLocation(font_shader, "fgcolor"), color.x, color.y, color.z, (float)time_since * 0.0003f);
+	glUniform4f(glGetUniformLocation(font_shader, "fgcolor"), red, grn, blu, (float)time_since * 0.0003f);
 	glUniformMatrix4fv(glGetUniformLocation(font_shader, "projection"), 1, GL_FALSE, &projection[0][0]);
 	glActiveTexture(GL_TEXTURE0);
 	glBindVertexArray(vao);
@@ -82,11 +91,12 @@ void EndTextAnim::render_text(const char *msg, const EndTextAnim::Font &font, fl
 			{xpos + w, ypos,     1.0f, 1.0f},
 			{xpos + w, ypos + h, 1.0f, 0.0f},
 		};
+		x += (g.advance >> 6) * scale;
+
 		glBindTexture(GL_TEXTURE_2D, g.texture);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(verts), verts);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
-		x += (g.advance >> 6) * scale;
 	}
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
@@ -96,7 +106,8 @@ bool EndTextAnim::advance(int rel_time)
 	glClear(GL_COLOR_BUFFER_BIT);
 	for (const auto &txt : texts)
 		if (rel_time >= txt.time)
-			render_text(txt.s, txt.font, txt.pos.x, txt.pos.y, txt.sz_scale, txt.color, rel_time - txt.time);
+			// render_text(txt.s, txt.font, txt.pos.x, txt.pos.y, txt.sz_scale, txt.color, rel_time - txt.time);
+			render_text(txt, rel_time);
 
 	if (++num_frames == 10000)
 		return true;
@@ -153,4 +164,34 @@ const EndTextAnim::Font::Glyph &EndTextAnim::Font::get_glyph(int c) const
 EndTextAnim::Font::~Font()
 {
 	glDeleteTextures(num_glyphs, textures);
+}
+
+void EndTextAnim::Text::center_text_at(const glm::vec2 &origo_pos, const glm::vec2 &text_origo)
+{
+	pos = origo_pos - (calc_size() * text_origo);
+}
+
+glm::vec2 EndTextAnim::Text::calc_size() const
+{
+	GLfloat x = 0.0f, h_max = 0.0f;
+	const char *msg = s;
+
+	for (; *msg != '\0'; msg++) {
+		const Font::Glyph &g = font.get_glyph(*msg);
+
+		float w = g.sz.x * sz_scale;
+		float h = g.sz.y * sz_scale;
+
+		x += ((float)g.advance * (1.0f / 64.0f)) * sz_scale;
+		h_max = max(h, h_max);
+	}
+	return glm::vec2(x, h_max);
+}
+
+EndTextAnim::Text::Text(const char *_s, const Font &_font, float _sz_scale, const std::pair<glm::vec2, glm::vec2> &positioning, const glm::vec3 &_color, int _time)
+		: s(_s), font(_font), sz_scale(_sz_scale), color(_color), time(_time)
+{
+	const glm::vec2 &origo_pos  = positioning.first;
+	const glm::vec2 &text_origo = positioning.second;
+	center_text_at(origo_pos, text_origo);
 }

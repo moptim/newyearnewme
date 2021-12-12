@@ -3,6 +3,7 @@
 
 #include <array>
 #include <memory>
+#include <utility>
 #include <vector>
 #include <GL/gl.h>
 #include <glm/glm.hpp>
@@ -15,6 +16,7 @@ private:
 	struct Text;
 	int num_frames;
 	FT_Library ft;
+	glm::vec2 scr_sz;
 
 	GLuint font_shader;
 	GLuint bezier_shader;
@@ -22,10 +24,9 @@ private:
 
 	std::vector<std::unique_ptr<Font> > fonts;
 	std::vector<Text> texts;
-	std::vector<Text>::const_iterator text_it;
 public:
-	EndTextAnim(GLuint _font_shader, GLuint _bezier_shader);
-	void render_text(const char *msg, const Font &font, float x, float y, float scale, glm::vec3 color, GLuint time_since);
+	EndTextAnim(const glm::vec2 &_scr_sz, GLuint _font_shader, GLuint _bezier_shader);
+	void render_text(const Text &text, GLuint curr_time);
 	bool advance(int rel_time);
 };
 
@@ -48,6 +49,10 @@ private:
 };
 
 struct EndTextAnim::Text {
+private:
+	void center_text_at(const glm::vec2 &origo_pos, const glm::vec2 &text_origo);
+	glm::vec2 calc_size() const;
+public:
 	const char *s;
 	const Font &font;
 	float sz_scale;
@@ -55,9 +60,7 @@ struct EndTextAnim::Text {
 	glm::vec3 color;
 	int time;
 
-	Text(const char *_s, const Font &_font, float _sz_scale, const glm::vec2 &_pos, const glm::vec3 &_color, int _time)
-		: s(_s), font(_font), sz_scale(_sz_scale), pos(_pos), color(_color), time(_time)
-	{}
+	Text(const char *_s, const Font &_font, float _sz_scale, const std::pair<glm::vec2, glm::vec2> &positioning, const glm::vec3 &_color, int _time);
 };
 
 #endif
