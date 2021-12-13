@@ -39,7 +39,7 @@ public:
 		GLuint advance;
 	};
 
-	Font(FT_Library &ft, const char *src);
+	Font(FT_Library &ft, const char *src, GLuint size);
 	const Glyph &get_glyph(int c) const;
 	~Font();
 private:

@@ -20,10 +20,12 @@ EndTextAnim::EndTextAnim(const glm::vec2 &_scr_sz, GLuint _font_shader, GLuint _
 	, font_shader(_font_shader)
 	, bezier_shader(_bezier_shader)
 {
+	GLuint font_sz = (GLuint)(scr_sz.y / 6.0f);
+
 	FT_Init_FreeType(&ft);
 
-	fonts.push_back(std::make_unique<Font>(ft, "/usr/share/fonts/ubuntu-font-family/Ubuntu-B.ttf"));
-	fonts.push_back(std::make_unique<Font>(ft, "/usr/share/fonts/open-sans/OpenSans-Light.ttf"));
+	fonts.push_back(std::make_unique<Font>(ft, "/usr/share/fonts/ubuntu-font-family/Ubuntu-B.ttf", font_sz));
+	fonts.push_back(std::make_unique<Font>(ft, "/usr/share/fonts/open-sans/OpenSans-Light.ttf", font_sz));
 
 	const std::pair<glm::vec2, glm::vec2> txtpos[] = {
 		std::make_pair(glm::vec2(scr_sz.x * 0.5f, scr_sz.y * 0.85f), glm::vec2(0.5f, 0.5f)),
@@ -115,14 +117,14 @@ bool EndTextAnim::advance(int rel_time)
 		return false;
 }
 
-EndTextAnim::Font::Font(FT_Library &ft, const char *src)
+EndTextAnim::Font::Font(FT_Library &ft, const char *src, GLuint size)
 {
 	FT_Face face;
 	int c;
 
 	if (FT_New_Face(ft, src, 0, &face) != 0)
 		throw std::runtime_error(std::string("Failed to load font ") + src);
-	FT_Set_Pixel_Sizes(face, 0, 128);
+	FT_Set_Pixel_Sizes(face, 0, size);
 
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	glGenTextures(num_glyphs, textures);
