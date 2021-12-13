@@ -18,13 +18,15 @@ FB::FB(int _wid, int _hei)
 		SDL_WINDOWPOS_UNDEFINED,
 		wid,
 		hei,
-		SDL_WINDOW_OPENGL);
+		SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN);
 
 	if (window == NULL) {
 		errmsg = "Failed to create window: ";
 		sdlerr = SDL_GetError();
 		goto out_throw;
 	}
+	SDL_ShowCursor(SDL_DISABLE);
+	SDL_WarpMouseInWindow(window, wid >> 1, hei >> 1);
 
 	gl_context = SDL_GL_CreateContext(window);
 	if (gl_context == NULL) {
