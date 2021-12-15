@@ -1,5 +1,6 @@
 #define GL_GLEXT_PROTOTYPES
 
+#include <cmath>
 #include <memory>
 #include <stdexcept>
 #include <utility>
@@ -9,16 +10,25 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include "bezier.hh"
 #include "end_text.hh"
+#include "utils.hh"
 
-#define max(a, b) (((a) > (b)) ? (a) : (b))
-#define min(a, b) (((a) < (b)) ? (a) : (b))
+static const uint8_t rainbow_flag[] = {
+	228,   3,   3,   0,
+	255, 140,   0,   0,
+	255, 237,   0,   0,
+	  0, 128,  38,   0,
+	  0,  77, 255,   0,
+	117,   7, 135,   0,
+};
 
-EndTextAnim::EndTextAnim(const glm::vec2 &_scr_sz, GLuint _font_shader, GLuint _bezier_shader)
+EndTextAnim::EndTextAnim(const glm::vec2 &_scr_sz, GLuint _font_shader, GLuint _bezier_shader, GLuint _blit_shader)
 	: num_frames(0)
 	, scr_sz(_scr_sz)
 	, font_shader(_font_shader)
 	, bezier_shader(_bezier_shader)
+	, blit_shader(_blit_shader)
 {
 	GLuint font_sz = (GLuint)(scr_sz.y / 6.0f);
 
@@ -48,6 +58,29 @@ EndTextAnim::EndTextAnim(const glm::vec2 &_scr_sz, GLuint _font_shader, GLuint _
 	texts.emplace_back("YES I'M",     *(fonts.at(0)), 0.4f, txtpos[2], txtcol[2], 4000);
 	texts.emplace_back("TRANSGENDER", *(fonts.at(0)), 0.8f, txtpos[3], txtcol[3], 7000);
 	texts.emplace_back("Kutsu mua ",  *(fonts.at(1)), 0.4f, txtpos[4], txtcol[4], 9000);
+
+	glGenTextures(1, &rainbow_texture);
+	glBindTexture(GL_TEXTURE_1D, rainbow_texture);
+	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, 6, 0, GL_RGBA, GL_UNSIGNED_BYTE, rainbow_flag);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	glGenTextures(1, &bezier_texture);
+	glBindTexture(GL_TEXTURE_2D, bezier_texture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	Bezier b(0.003f);
+	b.add_ctrl_point(glm::vec2( 50.0f, 150.0f));
+	b.add_ctrl_point(glm::vec2(150.0f, 200.0f));
+	b.add_ctrl_point(glm::vec2( 60.0f,  80.0f));
+	beziers.push_back(b);
+
+	bezier_buf_sz = glm::ivec2(800, 600);
+	bezier_buf = std::vector<uint8_t>(bezier_buf_sz.x * bezier_buf_sz.y);
+	for (auto &it : bezier_buf)
+		it = 0;
 
 	glGenVertexArrays(1, &vao);
 	glGenBuffers(1, &vbo);
@@ -103,13 +136,98 @@ void EndTextAnim::render_text(const Text &text, GLuint curr_time)
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+void EndTextAnim::thick_line(const glm::vec2 &a, const glm::vec2 &b, float thickness)
+{
+	float inv_thickness = 1.0f / thickness;
+	glm::vec2 ba = b - a;
+
+	glm::vec2 mins = glm::vec2(min(a.x, b.x), min(a.y, b.y));
+	glm::vec2 maxs = glm::vec2(max(a.x, b.x), max(a.y, b.y));
+
+	glm::vec2 iter_mins = glm::ivec2(floor(mins.x - thickness), floor(mins.y - thickness));
+	glm::vec2 iter_maxs = glm::ivec2(ceil (maxs.x + thickness), ceil (maxs.y + thickness));
+
+	for (int y = iter_mins.y; y < iter_maxs.y; y++) {
+		for (int x = iter_mins.x; x < iter_maxs.x; x++) {
+			glm::vec2 p = glm::vec2((float)x, (float)y);
+
+			glm::vec2 pa = p - a;
+			float h = glm::clamp(glm::dot(pa, ba) / glm::dot(ba, ba), 0.0f, 1.0f);
+			float dist = glm::length(pa - h * ba);
+			float strength = glm::clamp(1.0f - dist * inv_thickness, 0.0f, 1.0f);
+
+			uint8_t value = (uint8_t)(strength * 255.0f);
+			uint8_t &curr = bezier_buf.at(x + y * bezier_buf_sz.x);
+			curr = max(curr, value);
+		}
+	}
+}
+
+void EndTextAnim::advance_bezier(Bezier &b, float thickness /*, GLuint curr_time*/)
+{
+	glm::vec2 prev = b.get_point();
+	glm::vec2 next = b.advance();
+
+	thick_line(prev, next, thickness);
+}
+
+void EndTextAnim::draw_bezier_texture() const
+{
+	GLenum err; // TODO
+
+	while ((err = glGetError()) != GL_NO_ERROR)
+		printf("error before uniform %x\n", err);
+
+	glm::mat4 projection = glm::ortho(0.0f, scr_sz.x, 0.0f, scr_sz.y);
+	glUseProgram(blit_shader);
+	glUniformMatrix4fv(glGetUniformLocation(blit_shader, "projection"), 1, GL_FALSE, &projection[0][0]);
+
+	while ((err = glGetError()) != GL_NO_ERROR)
+		printf("error after uniform %x\n", err);
+
+	glBindVertexArray(vao);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	float xpos = 200.0f;
+	float ypos = 100.0f;
+	float w = bezier_buf_sz.x;
+	float h = bezier_buf_sz.y;
+
+	while ((err = glGetError()) != GL_NO_ERROR)
+		printf("error after blend %x\n", err);
+
+	float verts[6][4] = {
+		{xpos,     ypos + h, 0.0f, 0.0f},
+		{xpos,     ypos,     0.0f, 1.0f},
+		{xpos + w, ypos,     1.0f, 1.0f},
+		{xpos,     ypos + h, 0.0f, 0.0f},
+		{xpos + w, ypos,     1.0f, 1.0f},
+		{xpos + w, ypos + h, 1.0f, 0.0f},
+	};
+
+	glBindTexture(GL_TEXTURE_2D, bezier_texture);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(verts), verts);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, bezier_buf_sz.x, bezier_buf_sz.y, 0, GL_RED, GL_UNSIGNED_BYTE, bezier_buf.data());
+	// ha, only update after drawing - does this make a difference ghouth since
+	// teximage2d probably blocks? idk idc
+}
+
 bool EndTextAnim::advance(int rel_time)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	for (const auto &txt : texts)
 		if (rel_time >= txt.time)
-			// render_text(txt.s, txt.font, txt.pos.x, txt.pos.y, txt.sz_scale, txt.color, rel_time - txt.time);
 			render_text(txt, rel_time);
+
+	for (auto &b : beziers) {
+		const float thickness = 10.0f; // TODO
+
+		advance_bezier(b, thickness);
+	}
+	draw_bezier_texture();
 
 	if (++num_frames == 10000)
 		return true;

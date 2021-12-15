@@ -1,6 +1,7 @@
 #ifndef END_TEXT_HH
 #define END_TEXT_HH
 
+#include <cstdint>
 #include <array>
 #include <memory>
 #include <utility>
@@ -9,24 +10,38 @@
 #include <glm/glm.hpp>
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include "bezier.hh"
 
 class EndTextAnim {
 private:
 	class Font;
 	struct Text;
+
+	// TODO: do we need these?
+	glm::ivec2 bezier_buf_sz;
+	std::vector<uint8_t> bezier_buf;
+
 	int num_frames;
 	FT_Library ft;
 	glm::vec2 scr_sz;
 
-	GLuint font_shader;
-	GLuint bezier_shader;
+	GLuint font_shader, bezier_shader, blit_shader;
 	GLuint vao, vbo;
+	GLuint bezier_fbo;
 
+	GLuint rainbow_texture; // TODO remember to delete all these at the end too
+
+	GLuint bezier_texture;
 	std::vector<std::unique_ptr<Font> > fonts;
 	std::vector<Text> texts;
-public:
-	EndTextAnim(const glm::vec2 &_scr_sz, GLuint _font_shader, GLuint _bezier_shader);
+	std::vector<Bezier> beziers;
+
 	void render_text(const Text &text, GLuint curr_time);
+	void thick_line(const glm::vec2 &p0, const glm::vec2 &p1, float thickness);
+	void advance_bezier(Bezier &b, float inv_thickness /*, GLuint curr_time*/);
+	void draw_bezier_texture() const;
+public:
+	EndTextAnim(const glm::vec2 &_scr_sz, GLuint _font_shader, GLuint _bezier_shader, GLuint _blit_shader);
 	bool advance(int rel_time);
 };
 
