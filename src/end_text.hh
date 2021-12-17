@@ -27,7 +27,6 @@ private:
 
 	GLuint font_shader, bezier_shader, blit_shader;
 	GLuint vao, vbo;
-	GLuint bezier_fbo;
 
 	GLuint rainbow_texture; // TODO remember to delete all these at the end too
 
