@@ -85,6 +85,8 @@ EndTextAnim::EndTextAnim(const glm::vec2 &_scr_sz, GLuint _font_shader, GLuint _
 	texts.emplace_back("TRANSGENDER", *(fonts.at(0)), 0.8f, txtpos[3], txtcol[3], 7000);
 	texts.emplace_back("Kutsu mua ",  *(fonts.at(1)), 0.4f, txtpos[4], txtcol[4], 9000);
 
+	bezier_start_time = 11000;
+
 	glGenTextures(1, &rainbow_texture);
 	glBindTexture(GL_TEXTURE_1D, rainbow_texture);
 	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, 6, 0, GL_RGBA, GL_UNSIGNED_BYTE, rainbow_flag);
@@ -100,15 +102,17 @@ EndTextAnim::EndTextAnim(const glm::vec2 &_scr_sz, GLuint _font_shader, GLuint _
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	bezier_buf_sz = glm::ivec2(800, 240);
+	bezier_buf_sz = glm::ivec2(scr_sz.x * 0.45f, scr_sz.y * 0.225f);
+	bezier_thickness = scr_sz.y * 0.01f;
 	for (const auto &it : bezier_points) {
-		Bezier b(0.003f);
+		Bezier b(0.01f);
 		for (const auto &jt : it) {
 			glm::vec2 scaled_point = jt * glm::vec2(bezier_buf_sz);
 			b.add_ctrl_point(scaled_point);
 		}
 		beziers.push_back(b);
 	}
+	curr_bezier = beziers.begin();
 	bezier_pos = glm::vec2(scr_sz.x * 0.5f, scr_sz.y * 0.15f - (float)bezier_buf_sz.y * 0.5f);
 	bezier_buf = std::vector<uint8_t>(bezier_buf_sz.x * bezier_buf_sz.y);
 	for (auto &it : bezier_buf)
@@ -205,20 +209,12 @@ void EndTextAnim::advance_bezier(Bezier &b, float thickness /*, GLuint curr_time
 
 void EndTextAnim::draw_bezier_texture() const
 {
-	GLenum err; // TODO
-
-	while ((err = glGetError()) != GL_NO_ERROR)
-		printf("error before uniform %x\n", err);
-
 	glm::mat4 projection = glm::ortho(0.0f, scr_sz.x, 0.0f, scr_sz.y);
 	glUseProgram(blit_shader);
 	glUniformMatrix4fv(glGetUniformLocation(blit_shader, "projection"), 1, GL_FALSE, &projection[0][0]);
 
 	glUniform1i(glGetUniformLocation(blit_shader, "buf"), 0);
 	glUniform1i(glGetUniformLocation(blit_shader, "rainbow"), 1);
-
-	while ((err = glGetError()) != GL_NO_ERROR)
-		printf("error after uniform %x\n", err);
 
 	glBindVertexArray(vao);
 	glEnable(GL_BLEND);
@@ -228,9 +224,6 @@ void EndTextAnim::draw_bezier_texture() const
 	float ypos = bezier_pos.y;
 	float w = bezier_buf_sz.x;
 	float h = bezier_buf_sz.y;
-
-	while ((err = glGetError()) != GL_NO_ERROR)
-		printf("error after blend %x\n", err);
 
 	float verts[6][4] = {
 		{xpos,     ypos + h, 0.0f, 0.0f},
@@ -261,10 +254,11 @@ bool EndTextAnim::advance(int rel_time)
 		if (rel_time >= txt.time)
 			render_text(txt, rel_time);
 
-	for (auto &b : beziers) {
-		const float thickness = 10.0f; // TODO
-
-		advance_bezier(b, thickness);
+	if (rel_time >= bezier_start_time && curr_bezier != beziers.end()) {
+		if (!curr_bezier->is_ready())
+			advance_bezier(*curr_bezier, bezier_thickness);
+		else
+			++curr_bezier;
 	}
 	draw_bezier_texture();
 

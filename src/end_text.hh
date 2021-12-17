@@ -17,9 +17,10 @@ private:
 	class Font;
 	struct Text;
 
-	// TODO: do we need these?
 	glm::ivec2 bezier_buf_sz;
 	std::vector<uint8_t> bezier_buf;
+	float bezier_thickness;
+	int bezier_start_time;
 
 	int num_frames;
 	FT_Library ft;
@@ -35,6 +36,7 @@ private:
 	std::vector<std::unique_ptr<Font> > fonts;
 	std::vector<Text> texts;
 	std::vector<Bezier> beziers;
+	std::vector<Bezier>::iterator curr_bezier;
 
 	void render_text(const Text &text, GLuint curr_time);
 	void thick_line(const glm::vec2 &p0, const glm::vec2 &p1, float thickness);

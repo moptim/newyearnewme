@@ -20,6 +20,7 @@ public:
 	glm::vec2 get_point(float t) const;
 	glm::vec2 get_point() const;
 	glm::vec2 advance();
+	bool is_ready() const;
 	void reset();
 
 	void render_next_onto_buf(std::vector<uint8_t> buf, const glm::ivec2 &bufsz, float thickness, bool completely = false);

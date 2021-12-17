@@ -3,11 +3,10 @@ in vec2 tex_coords;
 out vec4 color;
 
 uniform sampler2D buf;
+uniform sampler1D rainbow;
 
 void main()
 {
-    // color = vec4(texture(buf, tex_coords).rgb, 1.0);
-    vec4 color1 = vec4(0.0, 0.7, 1.0, 1.0);
-    vec4 color2 = vec4(texture(buf, tex_coords).rrr, 1.0);
-    color = mix(color1, color2, 0.95);
+    // color = vec4(1.0, 0.0, 1.0, texture(buf, tex_coords).r);
+    color = vec4(texture(rainbow, tex_coords.x).rgb, texture(buf, tex_coords).r);
 }

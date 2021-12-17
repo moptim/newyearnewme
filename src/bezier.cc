@@ -67,3 +67,8 @@ void Bezier::render_next_onto_buf(std::vector<uint8_t> buf, const glm::ivec2 &bu
 		draw_line(curr, next, buf, bufsz, thickness);
 	}
 }
+
+bool Bezier::is_ready() const
+{
+	return pos >= 1.0f;
+}
