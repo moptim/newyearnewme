@@ -26,7 +26,7 @@ private:
 	FT_Library ft;
 	glm::vec2 scr_sz;
 
-	GLuint font_shader, bezier_shader, blit_shader;
+	GLuint font_shader, blit_shader;
 	GLuint vao, vbo;
 
 	GLuint rainbow_texture; // TODO remember to delete all these at the end too
@@ -43,7 +43,7 @@ private:
 	void advance_bezier(Bezier &b, float inv_thickness /*, GLuint curr_time*/);
 	void draw_bezier_texture() const;
 public:
-	EndTextAnim(const glm::vec2 &_scr_sz, GLuint _font_shader, GLuint _bezier_shader, GLuint _blit_shader);
+	EndTextAnim(const glm::vec2 &_scr_sz, GLuint _font_shader, GLuint _blit_shader);
 	bool advance(int rel_time);
 };
 

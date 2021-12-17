@@ -49,11 +49,10 @@ static const std::array<std::array<glm::vec2, 4>, 21> bezier_points = {{
 	{glm::vec2(0.937500, 0.425121), glm::vec2(0.870968, 0.019324), glm::vec2(0.967742, 0.135266), glm::vec2(0.951613, 0.217391)},
 }};
 
-EndTextAnim::EndTextAnim(const glm::vec2 &_scr_sz, GLuint _font_shader, GLuint _bezier_shader, GLuint _blit_shader)
+EndTextAnim::EndTextAnim(const glm::vec2 &_scr_sz, GLuint _font_shader, GLuint _blit_shader)
 	: num_frames(0)
 	, scr_sz(_scr_sz)
 	, font_shader(_font_shader)
-	, bezier_shader(_bezier_shader)
 	, blit_shader(_blit_shader)
 {
 	GLuint font_sz = (GLuint)(scr_sz.y / 6.0f);

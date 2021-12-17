@@ -25,11 +25,10 @@ int main(int ar, char **av)
 
 		ShaderContainer shaders;
 		GLuint font_shader = shaders.new_shader("shaders/font.vs", "shaders/font.fs");
-		GLuint bezier_shader = shaders.new_shader("shaders/bezier.vs", "shaders/bezier.fs");
 		GLuint blit_shader = shaders.new_shader("shaders/blit.vs", "shaders/blit.fs");
 
 		CarDrivingAnim car_driving;
-		EndTextAnim end_text(glm::vec2(dm.w, dm.h), font_shader, bezier_shader, blit_shader);
+		EndTextAnim end_text(glm::vec2(dm.w, dm.h), font_shader, blit_shader);
 
 		mainloop::mainloop(fb, car_driving, end_text);
 
