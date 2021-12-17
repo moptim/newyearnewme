@@ -30,6 +30,7 @@ private:
 
 	GLuint rainbow_texture; // TODO remember to delete all these at the end too
 
+	glm::vec2 bezier_pos;
 	GLuint bezier_texture;
 	std::vector<std::unique_ptr<Font> > fonts;
 	std::vector<Text> texts;

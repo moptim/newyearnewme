@@ -23,6 +23,32 @@ static const uint8_t rainbow_flag[] = {
 	117,   7, 135,   0,
 };
 
+static const std::array<std::array<glm::vec2, 4>, 21> bezier_points = {{
+	{glm::vec2(0.181452, 0.077295), glm::vec2(0.173387, 0.024155), glm::vec2(0.106855, 0.024155), glm::vec2(0.054435, 0.033816)},
+	{glm::vec2(0.153226, 0.478261), glm::vec2(0.108871, 0.497585), glm::vec2(0.066532, 0.492754), glm::vec2(0.038306, 0.478261)},
+	{glm::vec2(0.054435, 0.033816), glm::vec2(0.058468, 0.347826), glm::vec2(0.016129, 0.772947), glm::vec2(0.018145, 0.956522)},
+
+	{glm::vec2(0.018145, 0.956522), glm::vec2(0.147177, 0.971014), glm::vec2(0.173387, 0.913043), glm::vec2(0.179435, 0.845411)},
+	{glm::vec2(0.169355, 0.961353), glm::vec2(0.221774, 0.386473), glm::vec2(0.286290, 0.405797), glm::vec2(0.247984, 0.961353)},
+	{glm::vec2(0.247984, 0.961353), glm::vec2(0.280242, 0.386473), glm::vec2(0.350806, 0.449275), glm::vec2(0.310484, 0.893720)},
+	{glm::vec2(0.310484, 0.893720), glm::vec2(0.312500, 1.009662), glm::vec2(0.310484, 0.975845), glm::vec2(0.389113, 0.850242)},
+	{glm::vec2(0.379032, 0.961353), glm::vec2(0.431452, 0.386473), glm::vec2(0.500000, 0.405797), glm::vec2(0.457661, 0.961353)},
+	{glm::vec2(0.457661, 0.961353), glm::vec2(0.489919, 0.386473), glm::vec2(0.560484, 0.449275), glm::vec2(0.520161, 0.893720)},
+	{glm::vec2(0.520161, 0.893720), glm::vec2(0.522177, 1.009662), glm::vec2(0.520161, 0.975845), glm::vec2(0.598790, 0.850242)},
+	{glm::vec2(0.586694, 0.855072), glm::vec2(0.689516, 0.333333), glm::vec2(0.540323, 0.512077), glm::vec2(0.608871, 0.893720)},
+	{glm::vec2(0.608871, 0.893720), glm::vec2(0.655242, 1.024155), glm::vec2(0.695565, 0.830918), glm::vec2(0.695565, 0.067633)},
+	{glm::vec2(0.673387, 0.772947), glm::vec2(0.754032, 0.304348), glm::vec2(0.782258, 0.690821), glm::vec2(0.679435, 0.710145)},
+	{glm::vec2(0.679435, 0.685990), glm::vec2(0.709677, 1.048309), glm::vec2(0.723790, 1.004831), glm::vec2(0.818548, 0.550725)},
+	{glm::vec2(0.818548, 0.550725), glm::vec2(0.917339, 1.198068), glm::vec2(0.741935, 0.884058), glm::vec2(0.879032, 0.753623)},
+	{glm::vec2(0.879032, 0.753623), glm::vec2(1.008065, 0.550725), glm::vec2(0.899194, 0.396135), glm::vec2(0.897177, 0.748792)},
+	{glm::vec2(0.897177, 0.748792), glm::vec2(0.901210, 1.033816), glm::vec2(0.945565, 0.946860), glm::vec2(0.975806, 0.782609)},
+
+	{glm::vec2(0.635081, 0.207729), glm::vec2(0.681452, 0.048309), glm::vec2(0.681452, 0.169082), glm::vec2(0.620968, 0.415459)},
+	{glm::vec2(0.620968, 0.415459), glm::vec2(0.554435, 0.009662), glm::vec2(0.651210, 0.125604), glm::vec2(0.635081, 0.207729)},
+	{glm::vec2(0.951613, 0.217391), glm::vec2(0.997984, 0.057971), glm::vec2(0.997984, 0.178744), glm::vec2(0.937500, 0.425121)},
+	{glm::vec2(0.937500, 0.425121), glm::vec2(0.870968, 0.019324), glm::vec2(0.967742, 0.135266), glm::vec2(0.951613, 0.217391)},
+}};
+
 EndTextAnim::EndTextAnim(const glm::vec2 &_scr_sz, GLuint _font_shader, GLuint _bezier_shader, GLuint _blit_shader)
 	: num_frames(0)
 	, scr_sz(_scr_sz)
@@ -62,6 +88,9 @@ EndTextAnim::EndTextAnim(const glm::vec2 &_scr_sz, GLuint _font_shader, GLuint _
 	glGenTextures(1, &rainbow_texture);
 	glBindTexture(GL_TEXTURE_1D, rainbow_texture);
 	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, 6, 0, GL_RGBA, GL_UNSIGNED_BYTE, rainbow_flag);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	glGenTextures(1, &bezier_texture);
@@ -71,13 +100,16 @@ EndTextAnim::EndTextAnim(const glm::vec2 &_scr_sz, GLuint _font_shader, GLuint _
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	Bezier b(0.003f);
-	b.add_ctrl_point(glm::vec2( 50.0f, 150.0f));
-	b.add_ctrl_point(glm::vec2(150.0f, 200.0f));
-	b.add_ctrl_point(glm::vec2( 60.0f,  80.0f));
-	beziers.push_back(b);
-
-	bezier_buf_sz = glm::ivec2(800, 600);
+	bezier_buf_sz = glm::ivec2(800, 240);
+	for (const auto &it : bezier_points) {
+		Bezier b(0.003f);
+		for (const auto &jt : it) {
+			glm::vec2 scaled_point = jt * glm::vec2(bezier_buf_sz);
+			b.add_ctrl_point(scaled_point);
+		}
+		beziers.push_back(b);
+	}
+	bezier_pos = glm::vec2(scr_sz.x * 0.5f, scr_sz.y * 0.15f - (float)bezier_buf_sz.y * 0.5f);
 	bezier_buf = std::vector<uint8_t>(bezier_buf_sz.x * bezier_buf_sz.y);
 	for (auto &it : bezier_buf)
 		it = 0;
@@ -144,11 +176,11 @@ void EndTextAnim::thick_line(const glm::vec2 &a, const glm::vec2 &b, float thick
 	glm::vec2 mins = glm::vec2(min(a.x, b.x), min(a.y, b.y));
 	glm::vec2 maxs = glm::vec2(max(a.x, b.x), max(a.y, b.y));
 
-	glm::vec2 iter_mins = glm::ivec2(floor(mins.x - thickness), floor(mins.y - thickness));
-	glm::vec2 iter_maxs = glm::ivec2(ceil (maxs.x + thickness), ceil (maxs.y + thickness));
+	glm::ivec2 iter_mins = glm::ivec2(floor(mins.x - thickness), floor(mins.y - thickness));
+	glm::ivec2 iter_maxs = glm::ivec2(ceil (maxs.x + thickness), ceil (maxs.y + thickness));
 
-	for (int y = iter_mins.y; y < iter_maxs.y; y++) {
-		for (int x = iter_mins.x; x < iter_maxs.x; x++) {
+	for (int y = max(0, iter_mins.y); y < min(bezier_buf_sz.y, iter_maxs.y); y++) {
+		for (int x = max(0, iter_mins.x); x < min(bezier_buf_sz.x, iter_maxs.x); x++) {
 			glm::vec2 p = glm::vec2((float)x, (float)y);
 
 			glm::vec2 pa = p - a;
@@ -182,6 +214,9 @@ void EndTextAnim::draw_bezier_texture() const
 	glUseProgram(blit_shader);
 	glUniformMatrix4fv(glGetUniformLocation(blit_shader, "projection"), 1, GL_FALSE, &projection[0][0]);
 
+	glUniform1i(glGetUniformLocation(blit_shader, "buf"), 0);
+	glUniform1i(glGetUniformLocation(blit_shader, "rainbow"), 1);
+
 	while ((err = glGetError()) != GL_NO_ERROR)
 		printf("error after uniform %x\n", err);
 
@@ -189,8 +224,8 @@ void EndTextAnim::draw_bezier_texture() const
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	float xpos = 200.0f;
-	float ypos = 100.0f;
+	float xpos = bezier_pos.x;
+	float ypos = bezier_pos.y;
 	float w = bezier_buf_sz.x;
 	float h = bezier_buf_sz.y;
 
@@ -206,6 +241,10 @@ void EndTextAnim::draw_bezier_texture() const
 		{xpos + w, ypos + h, 1.0f, 0.0f},
 	};
 
+	glActiveTexture(GL_TEXTURE0 + 1);
+	glBindTexture(GL_TEXTURE_1D, rainbow_texture);
+
+	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, bezier_texture);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(verts), verts);
