@@ -19,16 +19,19 @@ int main(int ar, char **av)
 	}
 	SDL_GetCurrentDisplayMode(0, &dm);
 	try {
+		glm::vec2 win_size(dm.w, dm.h);
 		FB fb(dm.w, dm.h);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
 
 		ShaderContainer shaders;
+		GLuint sunglass_shader = shaders.new_shader("shaders/sunglasses.vs", "shaders/sunglasses.fs");
+
 		GLuint font_shader = shaders.new_shader("shaders/font.vs", "shaders/font.fs");
 		GLuint blit_shader = shaders.new_shader("shaders/blit.vs", "shaders/blit.fs");
 
-		CarDrivingAnim car_driving;
-		EndTextAnim end_text(glm::vec2(dm.w, dm.h), font_shader, blit_shader);
+		CarDrivingAnim car_driving(win_size, sunglass_shader);
+		EndTextAnim end_text(win_size, font_shader, blit_shader);
 
 		mainloop::mainloop(fb, car_driving, end_text);
 

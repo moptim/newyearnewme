@@ -7,7 +7,7 @@
 class SceneObject {
 private:
 	GLuint texture;
-	glm::mat3 pos;
+	glm::mat4 pos;
 public:
 	SceneObject();
 	SceneObject(const SceneObject &other);

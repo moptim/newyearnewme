@@ -9,5 +9,5 @@ SceneObject::SceneObject()
 SceneObject::SceneObject(const SceneObject &other)
 {
 	texture = other.texture;
-	pos = glm::mat3(other.pos);
+	pos = glm::mat4(other.pos);
 }
