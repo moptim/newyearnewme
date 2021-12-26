@@ -35,12 +35,12 @@ private:
 	GLuint bezier_texture;
 	std::vector<std::unique_ptr<Font> > fonts;
 	std::vector<Text> texts;
-	std::vector<Bezier> beziers;
-	std::vector<Bezier>::iterator curr_bezier;
+	std::vector<Bezier<glm::vec2> > beziers;
+	std::vector<Bezier<glm::vec2> >::iterator curr_bezier;
 
 	void render_text(const Text &text, GLuint curr_time);
 	void thick_line(const glm::vec2 &p0, const glm::vec2 &p1, float thickness);
-	void advance_bezier(Bezier &b, float inv_thickness /*, GLuint curr_time*/);
+	void advance_bezier(Bezier<glm::vec2> &b, float inv_thickness /*, GLuint curr_time*/);
 	void draw_bezier_texture() const;
 public:
 	EndTextAnim(const glm::vec2 &_scr_sz, GLuint _font_shader, GLuint _blit_shader);

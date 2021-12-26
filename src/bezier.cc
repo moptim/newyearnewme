@@ -5,12 +5,14 @@
 #include "bezier.hh"
 #include "utils.hh"
 
-glm::vec2 Bezier::interpolate(const glm::vec2 &a, const glm::vec2 &b, float c)
+template<class T>
+T Bezier<T>::interpolate(const T &a, const T &b, float c)
 {
 	return b * c + a * (1.0f - c);
 }
 
-void Bezier::draw_line(const glm::vec2 &a, const glm::vec2 &b, std::vector<uint8_t> buf, const glm::ivec2 &bufsz, float thickness)
+template<class T>
+void Bezier<T>::draw_line(const T &a, const T &b, std::vector<uint8_t> buf, const glm::ivec2 &bufsz, float thickness)
 {
 	// TODO
 	int coords = (int)b.x + (int)b.y * bufsz.x;
@@ -18,22 +20,25 @@ void Bezier::draw_line(const glm::vec2 &a, const glm::vec2 &b, std::vector<uint8
 	buf.at(coords) = max(buf.at(coords), 0xff);
 }
 
-Bezier::Bezier(float _advance_step)
+template<class T>
+Bezier<T>::Bezier(float _advance_step)
 	: advance_step(_advance_step)
 	, pos(0.0f)
 {
 }
 
-void Bezier::add_ctrl_point(const glm::vec2 &point)
+template<class T>
+void Bezier<T>::add_ctrl_point(const T &point)
 {
-	ctrl_points.push_back(glm::vec2(point));
+	ctrl_points.push_back(T(point));
 }
 
-glm::vec2 Bezier::get_point(float t) const
+template<class T>
+T Bezier<T>::get_point(float t) const
 {
 	int i, j;
 	int order = ctrl_points.size();
-	std::vector<glm::vec2> beta = ctrl_points;
+	std::vector<T> beta = ctrl_points;
 
 	for (i = 1; i < order; i++)
 		for (j = 0; j < order - i; j++)
@@ -42,33 +47,38 @@ glm::vec2 Bezier::get_point(float t) const
 	return beta.at(0);
 }
 
-glm::vec2 Bezier::get_point() const
+template<class T>
+T Bezier<T>::get_point() const
 {
 	return get_point(pos);
 }
 
-glm::vec2 Bezier::advance(float factor)
+template<class T>
+T Bezier<T>::advance(float factor)
 {
-	pos = min(1.0f, pos + advance_step * factor);
+	pos = min(1.0f, pos + advance_step);
 	return get_point(pos);
 }
 
-void Bezier::reset()
+template<class T>
+void Bezier<T>::reset()
 {
 	pos = 0.0f;
 }
 
-void Bezier::render_next_onto_buf(std::vector<uint8_t> buf, const glm::ivec2 &bufsz, float thickness, bool completely)
+template<class T>
+void Bezier<T>::render_next_onto_buf(std::vector<uint8_t> buf, const glm::ivec2 &bufsz, float thickness, bool completely)
 {
 	while (pos < 1.0f) {
-		glm::vec2 curr = get_point(pos);
-		glm::vec2 next = advance();
+		T curr = get_point(pos);
+		T next = advance();
 
 		draw_line(curr, next, buf, bufsz, thickness);
 	}
 }
 
-bool Bezier::is_ready() const
+template<class T>
+bool Bezier<T>::is_ready() const
 {
 	return pos >= 1.0f;
 }

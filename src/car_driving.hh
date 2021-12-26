@@ -16,8 +16,8 @@ private:
 	std::vector<SceneObject> statics;
 	SceneObject car;
 
-	std::vector<Bezier> cam_path;
-	std::vector<Bezier>::iterator curr_cam_bezier;
+	std::vector<Bezier<glm::vec3> > cam_path;
+	std::vector<Bezier<glm::vec3> >::iterator curr_cam_bezier;
 
 	glm::mat4 view;
 

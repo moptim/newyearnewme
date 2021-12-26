@@ -28,8 +28,6 @@ void CarDrivingAnim::gen_house_perlin(GLuint hei_pxs, GLuint wid_n, GLuint seed,
 {
 	GLuint fbo;
 
-	printf("generating hei_pxs %u, wid_n %u, seed %u, lvl %u\n", hei_pxs, wid_n, seed, lvl);
-
 	glGenTextures(1, &house_perlin_texture);
 	glBindTexture(GL_TEXTURE_2D, house_perlin_texture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, hei_pxs * wid_n, hei_pxs, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
@@ -131,17 +129,11 @@ CarDrivingAnim::CarDrivingAnim(const glm::vec2 &_scr_sz, GLuint _sunglass_shader
 	SceneObject house(house_vao, house_vbo, house_texture, index_count, house_model_mat);
 	add_object(house);
 
-	// TODO
-	glm::vec3 cam_pos(0.0f, 5.0f, 0.0f);
-	glm::vec3 cam_target(0.0f, 0.0f, 0.0f);
-	glm::vec3 up(0.0f, 0.0f, -1.0f);
-	view = glm::lookAt(cam_pos, cam_target, up);
-
-	Bezier b(0.001f);
-	b.add_ctrl_point(glm::vec2( 0.0,  0.0));
-	b.add_ctrl_point(glm::vec2( 0.0,  1.5));
-	b.add_ctrl_point(glm::vec2( 3.0, -1.5));
-	b.add_ctrl_point(glm::vec2( 0.0,  0.0));
+	Bezier<glm::vec3> b(0.001f);
+	b.add_ctrl_point(glm::vec3( 0.0f, 15.0f,  0.0f));
+	b.add_ctrl_point(glm::vec3( 0.0f,  5.0f,  1.5f));
+	b.add_ctrl_point(glm::vec3( 3.0f,  5.0f, -1.5f));
+	b.add_ctrl_point(glm::vec3( 0.0f,  5.0f,  0.0f));
 
 	cam_path.push_back(b);
 
@@ -156,9 +148,8 @@ void CarDrivingAnim::move_camera(int rel_time)
 {
 	if (curr_cam_bezier != cam_path.end()) {
 		if (!curr_cam_bezier->is_ready()) {
-			glm::vec2 cam_pos_2d = curr_cam_bezier->advance();
-			glm::vec3 cam_target(cam_pos_2d.x, 0.0f, cam_pos_2d.y);
-			glm::vec3 cam_pos(cam_target); cam_pos.y += 5.0f;
+			const glm::vec3 &cam_pos = curr_cam_bezier->advance();
+			glm::vec3 cam_target = cam_pos + glm::vec3(0.0f, -5.0f, 0.0f);
 			glm::vec3 up(0.0f, 0.0f, -1.0f);
 			view = glm::lookAt(cam_pos, cam_target, up);
 		} else {

@@ -104,7 +104,7 @@ EndTextAnim::EndTextAnim(const glm::vec2 &_scr_sz, GLuint _font_shader, GLuint _
 	bezier_buf_sz = glm::ivec2(scr_sz.x * 0.45f, scr_sz.y * 0.225f);
 	bezier_thickness = scr_sz.y * 0.01f;
 	for (const auto &it : bezier_points) {
-		Bezier b(0.01f);
+		Bezier<glm::vec2> b(0.01f);
 		for (const auto &jt : it) {
 			glm::vec2 scaled_point = jt * glm::vec2(bezier_buf_sz);
 			b.add_ctrl_point(scaled_point);
@@ -198,7 +198,7 @@ void EndTextAnim::thick_line(const glm::vec2 &a, const glm::vec2 &b, float thick
 	}
 }
 
-void EndTextAnim::advance_bezier(Bezier &b, float thickness /*, GLuint curr_time*/)
+void EndTextAnim::advance_bezier(Bezier<glm::vec2> &b, float thickness /*, GLuint curr_time*/)
 {
 	glm::vec2 prev = b.get_point();
 	glm::vec2 next = b.advance();
