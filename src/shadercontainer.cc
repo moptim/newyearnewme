@@ -56,7 +56,7 @@ GLuint ShaderContainer::new_shader(const char *vs_path, const char *fs_path)
 	glLinkProgram(prg);
 	glGetProgramiv(prg, GL_LINK_STATUS, &success);
 	if (!success) {
-		glGetShaderInfoLog(prg, log_size, NULL, log);
+		glGetProgramInfoLog(prg, log_size, NULL, log);
 		throw std::runtime_error(std::string("Failed to link shader program:\n") + log);
 	}
 	glDeleteShader(vs);

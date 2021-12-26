@@ -47,9 +47,9 @@ glm::vec2 Bezier::get_point() const
 	return get_point(pos);
 }
 
-glm::vec2 Bezier::advance()
+glm::vec2 Bezier::advance(float factor)
 {
-	pos = min(1.0f, pos + advance_step);
+	pos = min(1.0f, pos + advance_step * factor);
 	return get_point(pos);
 }
 

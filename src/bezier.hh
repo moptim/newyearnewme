@@ -19,7 +19,7 @@ public:
 	void add_ctrl_point(const glm::vec2 &point);
 	glm::vec2 get_point(float t) const;
 	glm::vec2 get_point() const;
-	glm::vec2 advance();
+	glm::vec2 advance(float factor = 1.0f);
 	bool is_ready() const;
 	void reset();
 
