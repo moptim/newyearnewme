@@ -1,0 +1,3 @@
+[submodule "sointu"]
+	path = sointu
+	url = https://github.com/vsariola/sointu.git
