@@ -27,8 +27,10 @@ void main()
 	if (inv_radius < 0.2)
 		discard;
 
+	float size_dimming = clamp(rad_factor * 3.0, 0.0, 1.0);
+	size_dimming *= size_dimming;
 	float rad_fact = smoothstep(0.2, 0.9, inv_radius);
-	alpha *= rad_fact;
+	alpha *= rad_fact * size_dimming;
 
 	color = vec4(hue, alpha);
 }

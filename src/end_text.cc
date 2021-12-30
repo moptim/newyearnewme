@@ -78,11 +78,11 @@ EndTextAnim::EndTextAnim(const glm::vec2 &_scr_sz, GLuint _font_shader, GLuint _
 		glm::vec3(0.3555f, 0.8047f, 0.9776f),
 	};
 
-	texts.emplace_back("KEEP CALM",   *(fonts.at(0)), 0.6f, txtpos[0], txtcol[0],  500);
-	texts.emplace_back("AND",         *(fonts.at(0)), 0.3f, txtpos[1], txtcol[1], 2000);
-	texts.emplace_back("YES I'M",     *(fonts.at(0)), 0.4f, txtpos[2], txtcol[2], 4000);
-	texts.emplace_back("TRANSGENDER", *(fonts.at(0)), 0.8f, txtpos[3], txtcol[3], 7000);
-	texts.emplace_back("Kutsu mua ",  *(fonts.at(1)), 0.4f, txtpos[4], txtcol[4], 9000);
+	texts.emplace_back("KEEP CALM",             *(fonts.at(0)), 0.6f, txtpos[0], txtcol[0],  500);
+	texts.emplace_back("AND",                   *(fonts.at(0)), 0.3f, txtpos[1], txtcol[1], 2000);
+	texts.emplace_back("YES I'M",               *(fonts.at(0)), 0.4f, txtpos[2], txtcol[2], 4000);
+	texts.emplace_back("TRANSGENDER (she/her)", *(fonts.at(0)), 0.8f, txtpos[3], txtcol[3], 7000);
+	texts.emplace_back("Kutsu mua ",            *(fonts.at(1)), 0.4f, txtpos[4], txtcol[4], 9000);
 
 	bezier_start_time = 11000;
 

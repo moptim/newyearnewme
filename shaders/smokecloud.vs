@@ -10,9 +10,9 @@ uniform float rad_factor;
 
 void main() {
 	vec4 vertices_tc[3] = vec4[3](
-		vec4(-1.0, -1.0, 0.0, 0.0),
-		vec4( 3.0, -1.0, 4.0, 0.0),
-		vec4(-1.0,  3.0, 0.0, 4.0)
+		vec4(-2.0, -2.0, 0.0, 0.0),
+		vec4( 6.0, -2.0, 4.0, 0.0),
+		vec4(-2.0,  6.0, 0.0, 4.0)
 	);
 	vec4 vert_tc = vertices_tc[gl_VertexID];
 	vec2 vert2d = vert_tc.xy * (rad_factor * 3.0);

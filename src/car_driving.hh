@@ -1,6 +1,7 @@
 #ifndef CAR_DRIVING_HH
 #define CAR_DRIVING_HH
 
+#include <random>
 #include <vector>
 #include <GL/gl.h>
 #include <glm/glm.hpp>
@@ -12,6 +13,11 @@ private:
 	static const int num_house_perlin_textures = 16;
 	static const int num_smoke_perlin_textures = 16;
 
+	struct SmokeCloud;
+	struct SmokeCloudTemplate;
+
+	std::mt19937 global_rndgen;
+
 	glm::vec2 scr_sz;
 	int num_frames;
 	std::vector<SceneObject> statics;
@@ -19,6 +25,8 @@ private:
 
 	std::vector<Bezier<glm::vec3> > cam_path;
 	std::vector<Bezier<glm::vec3> >::iterator curr_cam_bezier;
+
+	std::vector<SmokeCloud> smoke_clouds;
 
 	glm::mat4 view, projection;
 	glm::vec3 light_dir;
@@ -43,6 +51,8 @@ private:
 	static GLuint load_texture_from(const GLchar *fn);
 
 	void move_camera(int rel_time);
+	void add_smokeclouds(int rel_time);
+	void advance_smokeclouds(int rel_time);
 
 	void draw_background() const;
 	void draw_smokeclouds(int rel_time) const;
@@ -57,6 +67,25 @@ public:
 	void add_object(const SceneObject &obj);
 	void add_car(const SceneObject &car);
 	bool advance(int rel_time);
+};
+
+struct CarDrivingAnim::SmokeCloud {
+	glm::vec2 location;
+	glm::vec2 velocity;
+	glm::vec3 hue;
+	float tex_offset;
+	float growing_rate;
+	float shrinking_rate;
+	bool growing;
+	float radius;
+	float max_radius;
+
+	bool advance(float time_delta);
+};
+
+struct CarDrivingAnim::SmokeCloudTemplate : CarDrivingAnim::SmokeCloud{
+	int time;
+	bool added;
 };
 
 #endif
