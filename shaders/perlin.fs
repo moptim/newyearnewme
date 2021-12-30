@@ -4,6 +4,7 @@
 
 out vec4 color;
 
+uniform float initial_value;
 uniform highp uvec4 hei_dim_key_lvls;
 uniform vec2 ampl_params; // Initial amplitude | Attenuation per octave
 
@@ -47,19 +48,25 @@ void main()
 	uint key = hei_dim_key_lvls.z;
 	uint lvls = hei_dim_key_lvls.w;
 
+	uint max_wid = hei * dim;
+	uint max_hei = hei;
+
+	uint mwmask = max_wid - 1;
+	uint mhmask = max_hei - 1;
+
 	uint scale = hei;
 	float inv_scale = 1.0 / float(scale);
 	float amplitude = ampl_params.x;
 	float ampl_prog = ampl_params.y;
 
-	float value = 0.0;
+	float value = initial_value;
 	for (uint lvl = 0; lvl < lvls; lvl++) {
 		uint scale_mask = ~(scale - 1);
-	
+
 		uvec2 pos00 = uvec2(tex_coords.x & scale_mask, tex_coords.y & scale_mask);
-		uvec2 pos01 = uvec2(pos00.x,         pos00.y + scale);
-		uvec2 pos10 = uvec2(pos00.x + scale, pos00.y);
-		uvec2 pos11 = uvec2(pos00.x + scale, pos00.y + scale);
+		uvec2 pos11 = uvec2((pos00.x + scale) & mwmask, (pos00.y + scale) & mhmask);
+		uvec2 pos01 = uvec2(pos00.x, pos11.y);
+		uvec2 pos10 = uvec2(pos11.x, pos00.y);
 
 		vec2 rel_pos = (tex_coords_f - vec2(pos00)) * inv_scale;
 

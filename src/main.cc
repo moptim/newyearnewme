@@ -85,7 +85,7 @@ int main(int ar, char **av)
 		rv = 1;
 		goto out;
 	}
-	music_playback();
+	// music_playback(); // TODO
 
 	SDL_GetCurrentDisplayMode(0, &dm);
 	try {
@@ -102,11 +102,12 @@ int main(int ar, char **av)
 		GLuint sceneobject_shader = shaders.new_shader("shaders/sceneobject.vs", "shaders/sceneobject.fs");
 		GLuint smokecloud_shader = shaders.new_shader("shaders/smokecloud.vs", "shaders/smokecloud.fs");
 		GLuint perlin_shader = shaders.new_shader("shaders/perlin.vs", "shaders/perlin.fs");
+		GLuint background_shader = shaders.new_shader("shaders/background.vs", "shaders/background.fs");
 
 		GLuint font_shader = shaders.new_shader("shaders/font.vs", "shaders/font.fs");
 		GLuint blit_shader = shaders.new_shader("shaders/blit.vs", "shaders/blit.fs");
 
-		CarDrivingAnim car_driving(win_size, sunglass_shader, sceneobject_shader, smokecloud_shader, perlin_shader);
+		CarDrivingAnim car_driving(win_size, sunglass_shader, sceneobject_shader, smokecloud_shader, perlin_shader, background_shader);
 		EndTextAnim end_text(win_size, font_shader, blit_shader);
 
 		mainloop::mainloop(fb, car_driving, end_text);
