@@ -26,6 +26,8 @@ private:
 	std::vector<Bezier<glm::vec3> > cam_path;
 	std::vector<Bezier<glm::vec3> >::iterator curr_cam_bezier;
 
+	Bezier<glm::vec3> sunglass_bezier;
+
 	std::vector<SmokeCloud> smoke_clouds;
 
 	glm::mat4 view, projection;
@@ -35,9 +37,12 @@ private:
 
 	GLuint house_vao, house_vbo;
 	GLuint car_vao, car_vbo, car_index_vbo;
+	GLuint sunglasses_vao, sunglasses_vbo;
 
 	GLuint view_texture, view_depth, sunglass_texture, house_perlin_texture, smoke_perlin_texture, grass_perlin_texture, car_texture;
 	GLuint view_fbo, sunglass_fbo;
+
+	int car_index_count, sunglasses_index_count;
 
 	static GLuint gen_seed_from_pos(const glm::vec2 &pos);
 	static glm::vec3 random_hue(GLuint seed);
@@ -47,6 +52,7 @@ private:
 	void gen_house_at(const glm::vec2 &pos, GLsizei index_count, GLfloat max_texoff);
 	GLsizei gen_car_vao_vbo();
 	GLsizei gen_house_vao_vbo();
+	GLsizei gen_sunglasses_vao_vbo();
 	GLuint gen_fb_sized_tex(GLenum format, GLenum type) const;
 	static GLuint load_texture_from(const GLchar *fn);
 
@@ -59,7 +65,7 @@ private:
 	void draw_statics(int rel_time) const;
 	void draw_car(int rel_time) const;
 	void draw_scene(int rel_time) const;
-	void draw_sunglasses(int rel_time) const;
+	void draw_sunglasses(int rel_time);
 	void compose_final_scene() const;
 public:
 	CarDrivingAnim(const glm::vec2 &_scr_sz, GLuint _sunglass_shader, GLuint _sceneobject_shader, GLuint _smokecloud_shader, GLuint _perlin_shader, GLuint _background_shader, GLuint _car_shader);

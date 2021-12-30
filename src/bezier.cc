@@ -21,6 +21,13 @@ void Bezier<T>::draw_line(const T &a, const T &b, std::vector<uint8_t> buf, cons
 }
 
 template<class T>
+Bezier<T>::Bezier()
+	: advance_step(0.0f)
+	, pos(0.0f)
+{
+}
+
+template<class T>
 Bezier<T>::Bezier(float _advance_step)
 	: advance_step(_advance_step)
 	, pos(0.0f)

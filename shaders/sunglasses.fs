@@ -5,10 +5,19 @@ out vec4 color;
 uniform sampler2D view;
 uniform sampler2D sunglasses;
 
+vec3 hue_distortion = vec3(0.1f, 0.5f, 1.0f);
+
 void main()
 {
 	// color = vec4(1.0, tex_coords, 1.0);
 
 	// color = texture(sunglasses, tex_coords);
-	color = texture(view, tex_coords);
+	vec3 scene_color = vec3(texture(view, tex_coords));
+
+	// color = vec4(scene_color.b, scene_color.g, scene_color.r, 1.0);
+	// color = vec4(scene_color, 1.0);
+
+	color = texture(sunglasses, tex_coords);
+
+	// color = vec4(scene_color + hue_distortion - vec3(0.5, 0.5, 0.5), 1.0);
 }

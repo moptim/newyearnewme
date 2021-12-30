@@ -13,20 +13,17 @@
 
 #define TAU 6.28
 
-static std::array<glm::vec2, 4> trees = {
-	glm::vec2(1.0f, 1.0f),
-	glm::vec2(2.0f, 1.0f),
-	glm::vec2(1.0f, 2.0f),
-	glm::vec2(3.0f, 2.0f),
-};
-
-static std::array<glm::vec2, 6> house_coords = {
+static std::array<glm::vec2, 10> house_coords = {
+	glm::vec2(-40.0f,  6.0f),
+	glm::vec2(-40.0f, -6.0f),
 	glm::vec2(-20.0f,  6.0f),
 	glm::vec2(-20.0f, -6.0f),
 	glm::vec2(  0.0f,  6.0f),
 	glm::vec2(  0.0f, -6.0f),
 	glm::vec2( 20.0f,  6.0f),
 	glm::vec2( 20.0f, -6.0f),
+	glm::vec2( 40.0f,  6.0f),
+	glm::vec2( 40.0f, -6.0f),
 };
 
 GLuint CarDrivingAnim::gen_fb_sized_tex(GLenum format, GLenum type) const
@@ -291,6 +288,62 @@ GLsizei CarDrivingAnim::gen_car_vao_vbo()
 	return index_count;
 }
 
+GLsizei CarDrivingAnim::gen_sunglasses_vao_vbo()
+{
+	static const GLfloat sunglasses_vertexes[] = {
+		-6.0f,  0.0f,  0.0f,
+		-6.0f, -3.0f,  0.0f,
+		-5.0f,  0.6f,  0.0f,
+		-4.0f, -3.7f,  0.0f,
+		-2.0f,  0.6f,  0.0f,
+		-3.0f, -3.7f,  0.0f,
+		-1.0f,  0.0f,  0.0f,
+		-1.0f, -2.0f,  0.0f,
+		-0.8f, -0.5f,  0.0f,
+		-0.8f, -0.5f,  0.0f,
+
+		-1.0f,  0.0f,  0.0f,
+		 1.0f,  0.0f,  0.0f,
+		 0.8f, -0.5f,  0.0f,
+		 1.0f, -2.0f,  0.0f,
+		 1.0f,  0.0f,  0.0f,
+		 3.0f, -3.7f,  0.0f,
+		 2.0f,  0.6f,  0.0f,
+		 4.0f, -3.7f,  0.0f,
+		 5.0f,  0.6f,  0.0f,
+		 6.0f, -3.0f,  0.0f,
+		 6.0f,  0.0f,  0.0f,
+
+		 6.0f,  0.0f,  0.0f,
+
+		 6.0f,  0.0f, -8.0f,
+		 6.0f, -0.5f,  0.0f,
+		 6.0f, -0.5f, -8.0f,
+
+		 6.0f, -0.5f, -8.0f,
+
+		-6.0f,  0.0f,  0.0f,
+		-6.0f,  0.0f,  0.0f,
+
+		-6.0f,  0.0f, -8.0f,
+		-6.0f, -0.5f,  0.0f,
+		-6.0f, -0.5f, -8.0f,
+	};
+	GLsizei index_count = sizeof(sunglasses_vertexes) / (3 * sizeof(GLfloat));
+
+	glGenVertexArrays(1, &sunglasses_vao);
+	glBindVertexArray(sunglasses_vao);
+	glEnableVertexAttribArray(0);
+
+	glGenBuffers(1, &sunglasses_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, house_vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(sunglasses_vertexes), sunglasses_vertexes, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+
+	return index_count;
+}
+
 GLsizei CarDrivingAnim::gen_house_vao_vbo()
 {
 	static const GLfloat house_vertexes[] = {
@@ -357,7 +410,9 @@ CarDrivingAnim::CarDrivingAnim(const glm::vec2 &_scr_sz, GLuint _sunglass_shader
 	car_texture = load_texture_from("textures/car_texture.png");
 
 	GLsizei house_index_count = gen_house_vao_vbo();
-	GLsizei car_index_count = gen_car_vao_vbo();
+
+	car_index_count = gen_car_vao_vbo();
+	sunglasses_index_count = gen_sunglasses_vao_vbo();
 
 	for (const auto &it : house_coords)
 		gen_house_at(it, house_index_count, (float)num_house_perlin_textures);
@@ -400,6 +455,13 @@ CarDrivingAnim::CarDrivingAnim(const glm::vec2 &_scr_sz, GLuint _sunglass_shader
 	light_dir = glm::vec3(1.0f, 15.0f, 4.0f);
 
 	global_rndgen = std::mt19937(666); // TODO?
+
+	sunglass_bezier = Bezier<glm::vec3>(0.001f);
+	sunglass_bezier.add_ctrl_point(glm::vec3(2.0f, -1.0f, 4.0f));
+	sunglass_bezier.add_ctrl_point(glm::vec3(2.5f, -1.0f, -20.0f));
+	sunglass_bezier.add_ctrl_point(glm::vec3(-2.0f, 0.0f, -15.0f));
+	sunglass_bezier.add_ctrl_point(glm::vec3(40.0f, 20.0f, -12.0f));
+	sunglass_bezier.add_ctrl_point(glm::vec3(100.0f, 20.0f, -12.0f));
 }
 
 void CarDrivingAnim::move_camera(int rel_time)
@@ -558,10 +620,42 @@ void CarDrivingAnim::draw_scene(int rel_time) const
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void CarDrivingAnim::draw_sunglasses(int rel_time) const
+void CarDrivingAnim::draw_sunglasses(int rel_time)
 {
+	GLuint model_location  = glGetUniformLocation(sceneobject_shader, "model");
+	GLuint view_location   = glGetUniformLocation(sceneobject_shader, "view");
+	GLuint proj_location   = glGetUniformLocation(sceneobject_shader, "projection");
+	GLuint hue_location    = glGetUniformLocation(sceneobject_shader, "hue");
+
+	int actual_reveal_time = 1000;
+
+	if (rel_time > actual_reveal_time)
+		sunglass_bezier.advance();
+
+	glm::vec3 sg_cam_pos = sunglass_bezier.get_point();
+	// float z = 4.0f - (float)max(0, rel_time - actual_reveal_time) * 0.001f;
+	// glm::vec3 sg_cam_pos(2.0f, -1.0f, z);
+	glm::vec3 sg_cam_target = sg_cam_pos + glm::vec3(0.0f, 0.0f, 1.0f);
+	glm::vec3 sg_up(0.0f, 1.0f, 0.0f);
+	glm::mat4 sg_view = glm::lookAt(sg_cam_pos, sg_cam_target, sg_up);
+
+	// TODO TODO
+	glm::vec3 sg_pos(0.0f, 0.0f, 5.0f);
+	glm::mat4 sg_model = glm::translate(glm::mat4(1.0f), sg_pos);
+
+	glUseProgram(sceneobject_shader);
+	glUniformMatrix4fv(view_location, 1, GL_FALSE, &sg_view[0][0]);
+	glUniformMatrix4fv(model_location, 1, GL_FALSE, &sg_model[0][0]);
+	glUniformMatrix4fv(proj_location, 1, GL_FALSE, &projection[0][0]);
+
 	glBindFramebuffer(GL_FRAMEBUFFER, sunglass_fbo);
 	glClear(GL_COLOR_BUFFER_BIT);
+
+	glBindVertexArray(sunglasses_vao);
+	static const float hue_c[] = {1.0f, 0.0f, 0.0f, 1.0f};
+	glUniform3fv(hue_location, 0, hue_c);
+
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, sunglasses_index_count);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
@@ -607,7 +701,7 @@ void CarDrivingAnim::add_smokeclouds(int rel_time)
 		SmokeCloud c = {
 			.location = glm::vec2(4.0f, y) + pos_offset,
 			.velocity = velocity,
-			.hue = glm::vec3(1.0f, 0.2f, 0.8f),
+			.hue = glm::vec3(1.0f, 0.1f, 0.1f),
 			.tex_offset = tex_offset,
 			.growing_rate = 0.3f / 8000.0f,
 			.shrinking_rate = 0.3f / 64000.0f,

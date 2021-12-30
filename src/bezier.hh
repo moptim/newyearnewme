@@ -16,6 +16,7 @@ private:
 	static T interpolate(const T &a, const T &b, float c);
 	static void draw_line(const T &a, const T &b, std::vector<uint8_t> buf, const glm::ivec2 &bufsz, float thickness);
 public:
+	Bezier();
 	Bezier(float _advance_step);
 	void add_ctrl_point(const T &point);
 	T get_point(float t) const;
