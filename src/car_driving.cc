@@ -14,16 +14,16 @@
 #define TAU 6.28
 
 static std::array<glm::vec2, 10> house_coords = {
-	glm::vec2(-40.0f,  6.0f),
-	glm::vec2(-40.0f, -6.0f),
-	glm::vec2(-20.0f,  6.0f),
-	glm::vec2(-20.0f, -6.0f),
-	glm::vec2(  0.0f,  6.0f),
-	glm::vec2(  0.0f, -6.0f),
-	glm::vec2( 20.0f,  6.0f),
-	glm::vec2( 20.0f, -6.0f),
-	glm::vec2( 40.0f,  6.0f),
-	glm::vec2( 40.0f, -6.0f),
+	glm::vec2(-40.0f,  10.0f),
+	glm::vec2(-40.0f, -10.0f),
+	glm::vec2(-20.0f,  10.0f),
+	glm::vec2(-20.0f, -10.0f),
+	glm::vec2(  0.0f,  10.0f),
+	glm::vec2(  0.0f, -10.0f),
+	glm::vec2( 20.0f,  10.0f),
+	glm::vec2( 20.0f, -10.0f),
+	glm::vec2( 40.0f,  10.0f),
+	glm::vec2( 40.0f, -10.0f),
 };
 
 GLuint CarDrivingAnim::gen_fb_sized_tex(GLenum format, GLenum type) const
@@ -334,7 +334,7 @@ GLsizei CarDrivingAnim::gen_sunglasses_vao_vbo()
 	glEnableVertexAttribArray(0);
 
 	glGenBuffers(1, &sunglasses_vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, house_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, sunglasses_vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(sunglasses_vertexes), sunglasses_vertexes, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
@@ -433,16 +433,16 @@ CarDrivingAnim::CarDrivingAnim(const glm::vec2 &_scr_sz, GLuint _sunglass_shader
 	b.add_ctrl_point(glm::vec3(10.0f, 150.0f, 30.0f));
 	b.add_ctrl_point(glm::vec3( 3.0f, 120.0f, 45.0f));
 	b.add_ctrl_point(glm::vec3( 0.0f,  60.0f, -9.0f));
-	b.add_ctrl_point(glm::vec3( 0.0f,  20.0f,  0.0f));
-	b.add_ctrl_point(glm::vec3( 0.0f,  12.0f,  0.0f));
-	b.add_ctrl_point(glm::vec3( 0.0f,  11.0f,  0.0f));
+	b.add_ctrl_point(glm::vec3( 0.0f,  30.0f,  0.0f));
+	b.add_ctrl_point(glm::vec3( 0.0f,  22.0f,  0.0f));
+	b.add_ctrl_point(glm::vec3( 0.0f,  21.0f,  0.0f));
 
 	cam_path.push_back(b);
 
 	b = Bezier<glm::vec3>(0.0003f);
-	b.add_ctrl_point(glm::vec3( 0.0f, 11.0f,  0.0f));
-	b.add_ctrl_point(glm::vec3( 0.0f, 10.0f,  0.0f));
-	b.add_ctrl_point(glm::vec3( 0.0f, 20.0f,  5.0f));
+	b.add_ctrl_point(glm::vec3( 0.0f, 21.0f,  0.0f));
+	b.add_ctrl_point(glm::vec3( 0.0f, 20.0f,  0.0f));
+	b.add_ctrl_point(glm::vec3( 0.0f, 30.0f,  5.0f));
 
 	cam_path.push_back(b);
 
@@ -630,7 +630,7 @@ void CarDrivingAnim::draw_sunglasses(int rel_time)
 	while ((err = glGetError()) != GL_NO_ERROR)
 		printf("error %x\n", err);
 
-	int actual_reveal_time = 1000;
+	int actual_reveal_time = 12000;
 
 	if (rel_time > actual_reveal_time)
 		sunglass_bezier.advance();
@@ -654,7 +654,6 @@ void CarDrivingAnim::draw_sunglasses(int rel_time)
 
 	glBindVertexArray(sunglasses_vao);
 	static const GLfloat hue_c[] = {1.0f, 1.0f, 1.0f};
-	printf("hue %x at shd %i\n", hue_location, sunglasses_obj_shader);
 	glUniform3fv(hue_location, 1, hue_c);
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, sunglasses_index_count);
@@ -662,11 +661,15 @@ void CarDrivingAnim::draw_sunglasses(int rel_time)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void CarDrivingAnim::compose_final_scene() const
+void CarDrivingAnim::compose_final_scene(int rel_time) const
 {
+	float time_left = (float)(duration_ms - rel_time);
+	float fadeout = glm::clamp(time_left * 0.001f, 0.0f, 1.0f);
+
 	glUseProgram(sunglass_shader);
 	glUniform1i(glGetUniformLocation(sunglass_shader, "view"), 0);
 	glUniform1i(glGetUniformLocation(sunglass_shader, "sunglasses"), 1);
+	glUniform1f(glGetUniformLocation(sunglass_shader, "fadeout"), fadeout);
 
 	glBindVertexArray(0);
 	glActiveTexture(GL_TEXTURE0);
@@ -687,8 +690,8 @@ void CarDrivingAnim::add_smokeclouds(int rel_time)
 		std::normal_distribution<float> pos_dist(0.0f, 0.04f);
 		std::uniform_real_distribution<float> texoff_dist(0.0f, (float)num_smoke_perlin_textures);
 
-		std::exponential_distribution<float> speed_dist(4.0f);
-		std::normal_distribution<float> ang_dist(TAU / 2.0f, 0.15f);
+		std::exponential_distribution<float> speed_dist(2.0f);
+		std::normal_distribution<float> ang_dist(TAU / 2.0f, 0.25f);
 
 		glm::vec2 pos_offset(pos_dist(global_rndgen), pos_dist(global_rndgen));
 		float tex_offset = texoff_dist(global_rndgen);
@@ -745,10 +748,10 @@ bool CarDrivingAnim::advance(int rel_time)
 
 	move_camera(rel_time);
 	draw_scene(rel_time);
-	// draw_sunglasses(rel_time);
-	compose_final_scene();
+	draw_sunglasses(rel_time);
+	compose_final_scene(rel_time);
 
-	if (++num_frames == 20000)
+	if (rel_time > duration_ms)
 		return true;
 	else
 		return false;

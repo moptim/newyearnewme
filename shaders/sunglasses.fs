@@ -4,24 +4,22 @@ out vec4 color;
 
 uniform sampler2D view;
 uniform sampler2D sunglasses;
+uniform float fadeout;
 
 vec3 hue_distortion = vec3(0.1f, 0.5f, 1.0f);
 
 void main()
 {
-	// color = vec4(1.0, tex_coords, 1.0);
+	vec3 scene_color = vec3(texture(view, tex_coords)) * fadeout;
 
-	// color = texture(sunglasses, tex_coords);
-	vec3 scene_color = vec3(texture(view, tex_coords));
+	vec3 scene_sunglass_color = vec3(scene_color.b, scene_color.g, scene_color.r);
+	float gray = dot(scene_sunglass_color, vec3(0.299, 0.587, 0.114));
+	vec3 scene_grayscale_color = vec3(gray * 0.3);
+	scene_sunglass_color = mix(scene_sunglass_color, scene_grayscale_color, 0.8);
 
-	// color = vec4(scene_color.b, scene_color.g, scene_color.r, 1.0);
-	color = vec4(scene_color, 1.0);
-
-	// vec4 sg_color = texture(sunglasses, tex_coords);
-	// if (sg_color.r > 0.5)
-		// color = vec4(scene_color.b, scene_color.g, scene_color.r, 1.0);
-	// else
-		// color = vec4(scene_color, 1.0);
-
-	// color = vec4(scene_color + hue_distortion - vec3(0.5, 0.5, 0.5), 1.0);
+	vec4 sg_color = texture(sunglasses, tex_coords);
+	if (sg_color.r > 0.5)
+		color = vec4(scene_sunglass_color, 1.0);
+	else
+		color = vec4(scene_color, 1.0);
 }

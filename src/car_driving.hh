@@ -13,6 +13,8 @@ private:
 	static const int num_house_perlin_textures = 16;
 	static const int num_smoke_perlin_textures = 16;
 
+	static const int duration_ms = 35000;
+
 	struct SmokeCloud;
 	struct SmokeCloudTemplate;
 
@@ -66,7 +68,7 @@ private:
 	void draw_car(int rel_time) const;
 	void draw_scene(int rel_time) const;
 	void draw_sunglasses(int rel_time);
-	void compose_final_scene() const;
+	void compose_final_scene(int rel_time) const;
 public:
 	CarDrivingAnim(const glm::vec2 &_scr_sz, GLuint _sunglass_shader, GLuint _sceneobject_shader, GLuint _smokecloud_shader, GLuint _perlin_shader, GLuint _background_shader, GLuint _car_shader, GLuint _sunglasses_obj_shader);
 
