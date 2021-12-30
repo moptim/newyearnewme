@@ -24,9 +24,9 @@ MessageCallback( GLenum source,
                  const GLchar* message,
                  const void* userParam )
 {
-  fprintf( stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
-           ( type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : "" ),
-            type, severity, message );
+  // fprintf( stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+           // ( type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : "" ),
+            // type, severity, message );
 }
 
 static void audio_callback(void *_, Uint8 *bstream, int bstream_len)
@@ -104,12 +104,12 @@ int main(int ar, char **av)
 		GLuint perlin_shader = shaders.new_shader("shaders/perlin.vs", "shaders/perlin.fs");
 		GLuint background_shader = shaders.new_shader("shaders/background.vs", "shaders/background.fs");
 		GLuint car_shader = shaders.new_shader("shaders/car.vs", "shaders/car.fs");
-		// GLuint sunglass_obj_shader = shaders.new_shader("shaders/sunglass_fbo.vs", "shaders/car.fs");
+		GLuint sunglasses_obj_shader = shaders.new_shader("shaders/sunglass_fbo.vs", "shaders/sunglass_fbo.fs");
 
 		GLuint font_shader = shaders.new_shader("shaders/font.vs", "shaders/font.fs");
 		GLuint blit_shader = shaders.new_shader("shaders/blit.vs", "shaders/blit.fs");
 
-		CarDrivingAnim car_driving(win_size, sunglass_shader, sceneobject_shader, smokecloud_shader, perlin_shader, background_shader, car_shader);
+		CarDrivingAnim car_driving(win_size, sunglass_shader, sceneobject_shader, smokecloud_shader, perlin_shader, background_shader, car_shader, sunglasses_obj_shader);
 		EndTextAnim end_text(win_size, font_shader, blit_shader);
 
 		mainloop::mainloop(fb, car_driving, end_text);

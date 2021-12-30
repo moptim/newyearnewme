@@ -33,7 +33,7 @@ private:
 	glm::mat4 view, projection;
 	glm::vec3 light_dir;
 
-	GLuint sunglass_shader, sceneobject_shader, smokecloud_shader, perlin_shader, background_shader, car_shader;
+	GLuint sunglass_shader, sceneobject_shader, smokecloud_shader, perlin_shader, background_shader, car_shader, sunglasses_obj_shader;
 
 	GLuint house_vao, house_vbo;
 	GLuint car_vao, car_vbo, car_index_vbo;
@@ -68,7 +68,7 @@ private:
 	void draw_sunglasses(int rel_time);
 	void compose_final_scene() const;
 public:
-	CarDrivingAnim(const glm::vec2 &_scr_sz, GLuint _sunglass_shader, GLuint _sceneobject_shader, GLuint _smokecloud_shader, GLuint _perlin_shader, GLuint _background_shader, GLuint _car_shader);
+	CarDrivingAnim(const glm::vec2 &_scr_sz, GLuint _sunglass_shader, GLuint _sceneobject_shader, GLuint _smokecloud_shader, GLuint _perlin_shader, GLuint _background_shader, GLuint _car_shader, GLuint _sunglasses_obj_shader);
 
 	void add_object(const SceneObject &obj);
 	void add_car(const SceneObject &car);

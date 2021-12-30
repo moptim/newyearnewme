@@ -155,8 +155,6 @@ void CarDrivingAnim::gen_house_at(const glm::vec2 &pos, GLsizei index_count, GLf
 	std::uniform_real_distribution<float> texoff_dist(0.0f, max_texoff);
 	GLfloat texoff = texoff_dist(gen);
 
-	printf("hue is: r %.6f g %.6f b %.6f, texoff %.3f\n\n", hue.r, hue.g, hue.b, texoff);
-
 	SceneObject house(house_vao, house_vbo, 0, index_count, model_mat, hue, texoff);
 	add_object(house);
 }
@@ -388,7 +386,7 @@ GLsizei CarDrivingAnim::gen_house_vao_vbo()
 	return index_count;
 }
 
-CarDrivingAnim::CarDrivingAnim(const glm::vec2 &_scr_sz, GLuint _sunglass_shader, GLuint _sceneobject_shader, GLuint _smokecloud_shader, GLuint _perlin_shader, GLuint _background_shader, GLuint _car_shader)
+CarDrivingAnim::CarDrivingAnim(const glm::vec2 &_scr_sz, GLuint _sunglass_shader, GLuint _sceneobject_shader, GLuint _smokecloud_shader, GLuint _perlin_shader, GLuint _background_shader, GLuint _car_shader, GLuint _sunglasses_obj_shader)
 	: scr_sz(_scr_sz)
 	, sunglass_shader(_sunglass_shader)
 	, sceneobject_shader(_sceneobject_shader)
@@ -396,6 +394,7 @@ CarDrivingAnim::CarDrivingAnim(const glm::vec2 &_scr_sz, GLuint _sunglass_shader
 	, perlin_shader(_perlin_shader)
 	, background_shader(_background_shader)
 	, car_shader(_car_shader)
+	, sunglasses_obj_shader(_sunglasses_obj_shader)
 	, num_frames(0)
 {
 	ilInit();
@@ -622,10 +621,14 @@ void CarDrivingAnim::draw_scene(int rel_time) const
 
 void CarDrivingAnim::draw_sunglasses(int rel_time)
 {
-	GLuint model_location  = glGetUniformLocation(sceneobject_shader, "model");
-	GLuint view_location   = glGetUniformLocation(sceneobject_shader, "view");
-	GLuint proj_location   = glGetUniformLocation(sceneobject_shader, "projection");
-	GLuint hue_location    = glGetUniformLocation(sceneobject_shader, "hue");
+	GLuint model_location  = glGetUniformLocation(sunglasses_obj_shader, "model");
+	GLuint view_location   = glGetUniformLocation(sunglasses_obj_shader, "view");
+	GLuint proj_location   = glGetUniformLocation(sunglasses_obj_shader, "projection");
+	GLuint hue_location    = glGetUniformLocation(sunglasses_obj_shader, "hue");
+
+	GLenum err;
+	while ((err = glGetError()) != GL_NO_ERROR)
+		printf("error %x\n", err);
 
 	int actual_reveal_time = 1000;
 
@@ -633,8 +636,6 @@ void CarDrivingAnim::draw_sunglasses(int rel_time)
 		sunglass_bezier.advance();
 
 	glm::vec3 sg_cam_pos = sunglass_bezier.get_point();
-	// float z = 4.0f - (float)max(0, rel_time - actual_reveal_time) * 0.001f;
-	// glm::vec3 sg_cam_pos(2.0f, -1.0f, z);
 	glm::vec3 sg_cam_target = sg_cam_pos + glm::vec3(0.0f, 0.0f, 1.0f);
 	glm::vec3 sg_up(0.0f, 1.0f, 0.0f);
 	glm::mat4 sg_view = glm::lookAt(sg_cam_pos, sg_cam_target, sg_up);
@@ -643,7 +644,7 @@ void CarDrivingAnim::draw_sunglasses(int rel_time)
 	glm::vec3 sg_pos(0.0f, 0.0f, 5.0f);
 	glm::mat4 sg_model = glm::translate(glm::mat4(1.0f), sg_pos);
 
-	glUseProgram(sceneobject_shader);
+	glUseProgram(sunglasses_obj_shader);
 	glUniformMatrix4fv(view_location, 1, GL_FALSE, &sg_view[0][0]);
 	glUniformMatrix4fv(model_location, 1, GL_FALSE, &sg_model[0][0]);
 	glUniformMatrix4fv(proj_location, 1, GL_FALSE, &projection[0][0]);
@@ -652,8 +653,9 @@ void CarDrivingAnim::draw_sunglasses(int rel_time)
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	glBindVertexArray(sunglasses_vao);
-	static const float hue_c[] = {1.0f, 0.0f, 0.0f, 1.0f};
-	glUniform3fv(hue_location, 0, hue_c);
+	static const GLfloat hue_c[] = {1.0f, 1.0f, 1.0f};
+	printf("hue %x at shd %i\n", hue_location, sunglasses_obj_shader);
+	glUniform3fv(hue_location, 1, hue_c);
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, sunglasses_index_count);
 
@@ -743,7 +745,7 @@ bool CarDrivingAnim::advance(int rel_time)
 
 	move_camera(rel_time);
 	draw_scene(rel_time);
-	draw_sunglasses(rel_time);
+	// draw_sunglasses(rel_time);
 	compose_final_scene();
 
 	if (++num_frames == 20000)
