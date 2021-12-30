@@ -18,7 +18,7 @@ INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
 CXXFLAGS ?= $(INC_FLAGS) -MMD -MP --std=c++14 -g # -I/usr/include/freetype2/
 
-LDFLAGS ?= -lSDL2 -lGL -lfreetype -pthread
+LDFLAGS ?= -lSDL2 -lGL -lfreetype -pthread -lIL
 
 $(BUILD_DIR)/$(TARGET_EXEC): compile_soundtrack $(OBJS)
 	$(CXX) $(OBJS) -o $@ $(LDFLAGS)
@@ -37,6 +37,7 @@ run:
 
 compile_soundtrack:
 	cd $(SOINTU_DIR); go run $(SOINTU_COMPILE) -o ../$(SRC_DIRS) -arch=amd64 ../$(MUSIC_DIR)/$(SOUNDTRACK_SRC)
+	mkdir -p $(BUILD_DIR)/$(SRC_DIRS)
 	nasm -f elf64 $(SRC_DIRS)/soundtrack.asm -o $(SOUNDTRACK_OBJ_PATH)
 
 -include $(DEPS)

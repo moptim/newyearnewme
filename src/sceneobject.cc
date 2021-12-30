@@ -1,6 +1,5 @@
 #define GL_GLEXT_PROTOTYPES
 
-#include <cstdio> // TODO!!!!!!!!!!!!!!!!!!!!!!!
 #include <GL/gl.h>
 #include <glm/glm.hpp>
 #include "sceneobject.hh"
@@ -22,7 +21,6 @@ SceneObject::SceneObject(GLuint _vao, GLuint _vbo, GLuint _texture, GLsizei _ind
 	, hue(_hue)
 	, texoff(_texoff)
 {
-	printf("texoff in ctor %.3f\n", texoff);
 }
 
 SceneObject::~SceneObject()
