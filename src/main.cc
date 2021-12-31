@@ -85,7 +85,7 @@ int main(int ar, char **av)
 		rv = 1;
 		goto out;
 	}
-	// music_playback(); // TODO
+	music_playback();
 
 	SDL_GetCurrentDisplayMode(0, &dm);
 	try {
