@@ -16,9 +16,9 @@ DEPS := $(OBJS:.o=.d)
 INC_DIRS := $(shell find $(SRC_DIRS) -type d) /usr/include/freetype2
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
-CXXFLAGS ?= $(INC_FLAGS) -MMD -MP --std=c++14 -g # -I/usr/include/freetype2/
+CXXFLAGS ?= $(INC_FLAGS) -MMD -MP -O2 --std=c++14 -g
 
-LDFLAGS ?= -lSDL2 -lGL -lfreetype -pthread -lIL
+LDFLAGS ?= -lSDL2 -lGL -lfreetype -lIL
 
 $(BUILD_DIR)/$(TARGET_EXEC): compile_soundtrack $(OBJS)
 	$(CXX) $(OBJS) -o $@ $(LDFLAGS)

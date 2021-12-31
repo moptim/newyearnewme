@@ -248,6 +248,9 @@ void EndTextAnim::draw_bezier_texture() const
 
 bool EndTextAnim::advance(int rel_time)
 {
+	const int time_after_ending = 5000;
+	static int ending_time = 0;
+
 	glClear(GL_COLOR_BUFFER_BIT);
 	for (const auto &txt : texts)
 		if (rel_time >= txt.time)
@@ -261,10 +264,14 @@ bool EndTextAnim::advance(int rel_time)
 	}
 	draw_bezier_texture();
 
-	if (++num_frames == 10000)
-		return true;
-	else
-		return false;
+	if (curr_bezier == beziers.end()) {
+		if (ending_time == 0)
+			ending_time = rel_time;
+
+		if (rel_time >= ending_time + time_after_ending)
+			return true;
+	}
+	return false;
 }
 
 EndTextAnim::Font::Font(FT_Library &ft, const char *src, GLuint size)

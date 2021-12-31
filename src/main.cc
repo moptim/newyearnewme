@@ -1,7 +1,6 @@
 #define GL_GLEXT_PROTOTYPES
 
 #include <cstdio>
-#include <thread>
 #include <SDL2/SDL.h>
 #include <GL/gl.h>
 #include <glm/glm.hpp>
@@ -15,26 +14,12 @@
 static SUsample music_buf[SU_BUFFER_LENGTH];
 static size_t music_curr_sample = 0;
 
-void GLAPIENTRY
-MessageCallback( GLenum source,
-                 GLenum type,
-                 GLuint id,
-                 GLenum severity,
-                 GLsizei length,
-                 const GLchar* message,
-                 const void* userParam )
-{
-  // fprintf( stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
-           // ( type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : "" ),
-            // type, severity, message );
-}
-
 static void audio_callback(void *_, Uint8 *bstream, int bstream_len)
 {
 	float *fstream = (float *)bstream;
 	int fstream_len = bstream_len / sizeof(float);
 
-	const float volume = 4.0f;
+	const float volume = 1.0f;
 
 	for (int i = 0; i < fstream_len; i++) {
 		if (music_curr_sample >= SU_BUFFER_LENGTH) {
@@ -45,11 +30,6 @@ static void audio_callback(void *_, Uint8 *bstream, int bstream_len)
 			music_curr_sample++;
 		}
 	}
-}
-
-static void audio_renderer(void)
-{
-	su_render_song(music_buf);
 }
 
 static void music_playback(void)
@@ -64,10 +44,7 @@ static void music_playback(void)
 	want.samples = 4096;
 	want.callback = audio_callback;
 
-	std::thread renderer(audio_renderer);
-	SDL_Delay(200); // Wait for renderer to progress somewhere, this is
-	                // assuming it does work at >1x rate obviously
-	renderer.join();
+	su_render_song(music_buf);
 
 	dev = SDL_OpenAudioDevice(NULL, 0, &want, &have, 0);
 	if (dev == 0)
@@ -93,9 +70,6 @@ int main(int ar, char **av)
 		FB fb(dm.w, dm.h);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
-
-		glEnable(GL_DEBUG_OUTPUT);
-		glDebugMessageCallback(MessageCallback, NULL);
 
 		ShaderContainer shaders;
 		GLuint sunglass_shader = shaders.new_shader("shaders/sunglasses.vs", "shaders/sunglasses.fs");
